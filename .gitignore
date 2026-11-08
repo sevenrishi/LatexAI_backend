@@ -1,0 +1,86 @@
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Environment and Local Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.cert
+
+# Local Database & Storage
+.data/
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+uploads/
+temp/
+tmp/
+
+# Production and Build Output
+dist/
+build/
+compiler/dist/
+*.tsbuildinfo
+
+# LaTeX Compilation Artifacts & Temporary Files
+*.aux
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.bbl
+*.blg
+*.log
+*.out
+*.toc
+*.lof
+*.lot
+*.idx
+*.ind
+*.ilg
+*.nav
+*.snm
+*.vrb
+*.dvi
+*.xdv
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Testing & Coverage
+coverage/
+.nyc_output/
+test-results/
+
+# Editor and IDE Files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.swo
+
+# OS Generated Files
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+[Dd]esktop.ini
+
+# Supabase Local Runtime
+.supabase/
+

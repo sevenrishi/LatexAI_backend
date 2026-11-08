@@ -1,0 +1,32 @@
+# Fly.io deployment manifest for LatexAI Backend API
+app = "latexai-api"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "4000"
+  NODE_ENV = "production"
+  API_PREFIX = "/api/v1"
+  ENABLE_CONFIG_ENDPOINT = "false"
+  GENERATION_DAILY_LIMIT = "20"
+
+[http_service]
+  internal_port = 4000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+
+[[http_service.checks]]
+  grace_period = "10s"
+  interval = "30s"
+  method = "GET"
+  timeout = "5s"
+  path = "/health"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "1gb"

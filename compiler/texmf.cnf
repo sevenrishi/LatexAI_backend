@@ -1,0 +1,11 @@
+% Paranoid TeX Live security configuration
+% Complies with task BE-3.22
+
+% Strictly disable all shell escapes (\write18, etc.)
+shell_escape = f
+
+% Restrict file input: 'p' = paranoid (disallow dot-files and parent directory ../ traversal)
+openin_any = p
+
+% Restrict file output: 'p' = paranoid (only write in current/output working directory)
+openout_any = p

@@ -1,0 +1,1759 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "LatexAI Backend API",
+    "version": "1.0.0",
+    "description": "Production API for LaTeX AI resume generation, ATS scoring, LaTeX compilation, and candidate profile management."
+  },
+  "servers": [
+    {
+      "url": "/api/v1",
+      "description": "API v1 Endpoint"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "details": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ]
+          }
+        },
+        "required": [
+          "success",
+          "error"
+        ]
+      },
+      "ResumeSummary": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "jobTitle": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "companyName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "type": "string"
+          },
+          "progress": {
+            "type": "integer"
+          },
+          "templateId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "pageCount": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "targetPageCount": {
+            "type": "integer"
+          },
+          "atsScore": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "hasPdf": {
+            "type": "boolean"
+          },
+          "hasTex": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "DashboardSummary": {
+        "type": "object",
+        "properties": {
+          "overview": {
+            "type": "object",
+            "properties": {
+              "totalResumes": {
+                "type": "integer"
+              },
+              "completedResumes": {
+                "type": "integer"
+              },
+              "failedResumes": {
+                "type": "integer"
+              },
+              "inProgressResumes": {
+                "type": "integer"
+              },
+              "averageAtsScore": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            }
+          },
+          "quotas": {
+            "type": "object",
+            "properties": {
+              "dailyUsed": {
+                "type": "integer"
+              },
+              "dailyLimit": {
+                "type": "integer"
+              },
+              "dailyRemaining": {
+                "type": "integer"
+              }
+            }
+          },
+          "topKeywords": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "keyword": {
+                  "type": "string"
+                },
+                "count": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "templateUsage": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "templateId": {
+                  "type": "string"
+                },
+                "count": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "recentResumes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResumeSummary"
+            }
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/auth/signup": {
+      "post": {
+        "summary": "Create candidate account",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 8
+                  },
+                  "fullName": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "email",
+                  "password"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created"
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "summary": "Login with email and password",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "email",
+                  "password"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authentication token returned"
+          }
+        }
+      }
+    },
+    "/auth/demo": {
+      "post": {
+        "summary": "Obtain demo session for testing or previewing without signup",
+        "responses": {
+          "200": {
+            "description": "Demo authentication token and profile"
+          }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "summary": "Get authenticated user profile and completeness",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Profile data"
+          }
+        }
+      }
+    },
+    "/auth/onboarding/complete": {
+      "post": {
+        "summary": "Persist onboarding completion and setup preferences",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fullName": {
+                    "type": "string"
+                  },
+                  "headline": {
+                    "type": "string"
+                  },
+                  "targetRole": {
+                    "type": "string"
+                  },
+                  "industry": {
+                    "type": "string"
+                  },
+                  "experienceLevel": {
+                    "type": "string"
+                  },
+                  "templateId": {
+                    "type": "string"
+                  },
+                  "tonePreference": {
+                    "type": "string"
+                  },
+                  "bulletDensity": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile updated with onboarding completed"
+          }
+        }
+      }
+    },
+    "/auth/password": {
+      "post": {
+        "summary": "Update user password",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "currentPassword": {
+                    "type": "string"
+                  },
+                  "newPassword": {
+                    "type": "string",
+                    "minLength": 8
+                  }
+                },
+                "required": [
+                  "newPassword"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password updated successfully"
+          }
+        }
+      }
+    },
+    "/auth/push-token": {
+      "post": {
+        "summary": "Register mobile device push notification token",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "token": {
+                    "type": "string"
+                  },
+                  "platform": {
+                    "type": "string"
+                  },
+                  "appVersion": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "token"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Push token registered successfully"
+          }
+        }
+      }
+    },
+    "/auth/export": {
+      "get": {
+        "summary": "GDPR/Profile Data Export Archive",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Comprehensive user profile archive"
+          }
+        }
+      }
+    },
+    "/auth/account": {
+      "delete": {
+        "summary": "Delete account and cascade purge all stored records and files",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Account deleted successfully"
+          }
+        }
+      }
+    },
+    "/profile": {
+      "get": {
+        "summary": "Get full profile knowledge base with completeness metrics",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Full aggregated candidate profile"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Partially update root profile fields (contact info, links, summary)",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fullName": {
+                    "type": "string"
+                  },
+                  "headline": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string"
+                  },
+                  "location": {
+                    "type": "string"
+                  },
+                  "summary": {
+                    "type": "string"
+                  },
+                  "website": {
+                    "type": "string"
+                  },
+                  "github": {
+                    "type": "string"
+                  },
+                  "linkedin": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated profile"
+          }
+        }
+      }
+    },
+    "/profile/{section}": {
+      "get": {
+        "summary": "Get items in profile section (experience, education, skills, certifications, projects)",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "section",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "experience",
+                "education",
+                "skills",
+                "certifications",
+                "projects"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of section items"
+          }
+        }
+      },
+      "post": {
+        "summary": "Add item to profile section",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "section",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "experience",
+                "education",
+                "skills",
+                "certifications",
+                "projects"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created item"
+          }
+        }
+      }
+    },
+    "/profile/{section}/{id}": {
+      "put": {
+        "summary": "Update specific section item",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "section",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated item"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete specific section item",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "section",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Item deleted"
+          }
+        }
+      }
+    },
+    "/profile/skills/bulk": {
+      "post": {
+        "summary": "Bulk add skills case-insensitively",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "skills": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "skills"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated skills list"
+          }
+        }
+      }
+    },
+    "/profile/{section}/reorder": {
+      "patch": {
+        "summary": "Reorder items in profile section",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "section",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "orderedIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "orderedIds"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Reordered profile"
+          }
+        }
+      }
+    },
+    "/profile/import-resume": {
+      "post": {
+        "summary": "Upload and parse existing PDF/DOCX resume",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "file"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Parsed resume draft with 24h expiration"
+          }
+        }
+      }
+    },
+    "/profile/import-resume/{importId}/confirm": {
+      "post": {
+        "summary": "Confirm and apply parsed resume data with merge/replace strategy",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "importId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "strategy": {
+                    "type": "string",
+                    "enum": [
+                      "merge",
+                      "replace"
+                    ],
+                    "default": "merge"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated full profile"
+          }
+        }
+      }
+    },
+    "/profile/import-resume/{importId}": {
+      "delete": {
+        "summary": "Discard temporary resume import draft",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "importId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Draft discarded"
+          }
+        }
+      }
+    },
+    "/templates": {
+      "get": {
+        "summary": "List all system and user custom templates",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of available templates"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create new custom template from LaTeX code or file upload",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "latexCode": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "latexCode"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created template"
+          }
+        }
+      }
+    },
+    "/templates/{id}": {
+      "get": {
+        "summary": "Get template details and LaTeX source",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Template detail"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update custom template",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Updated template"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete custom template with fallback activation",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Template deleted"
+          }
+        }
+      }
+    },
+    "/templates/{id}/duplicate": {
+      "post": {
+        "summary": "Duplicate template into an editable custom user template",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Duplicated template"
+          }
+        }
+      }
+    },
+    "/templates/{id}/activate": {
+      "post": {
+        "summary": "Set active template for candidate profile",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Template activated"
+          }
+        }
+      }
+    },
+    "/templates/{id}/preview": {
+      "post": {
+        "summary": "Render template preview PDF with sample or user profile data",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Preview PDF base64 and details"
+          }
+        }
+      }
+    },
+    "/templates/{id}/placeholders": {
+      "get": {
+        "summary": "Get supported placeholders for template editor",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of placeholders and schemas"
+          }
+        }
+      }
+    },
+    "/jobs/fetch": {
+      "post": {
+        "summary": "Fetch remote job description URL with SSRF guards",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "format": "uri"
+                  }
+                },
+                "required": [
+                  "url"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Extracted job title, company, and rawText"
+          }
+        }
+      }
+    },
+    "/jobs/extract": {
+      "post": {
+        "summary": "Extract structured requirements and keywords from raw job text",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "rawText": {
+                    "type": "string"
+                  },
+                  "jobTitle": {
+                    "type": "string"
+                  },
+                  "company": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "rawText"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Structured job requirements"
+          }
+        }
+      }
+    },
+    "/generate": {
+      "post": {
+        "summary": "Queue asynchronous resume generation",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "jobDescription": {
+                    "type": "string"
+                  },
+                  "jobUrl": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "templateId": {
+                    "type": "string"
+                  },
+                  "targetPageCount": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 3
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Generation queued"
+          }
+        }
+      }
+    },
+    "/generate/parse-url": {
+      "post": {
+        "summary": "Job URL content extractor fallback alias for client compatibility",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "format": "uri"
+                  }
+                },
+                "required": [
+                  "url"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Extracted job content"
+          }
+        }
+      }
+    },
+    "/generate/usage": {
+      "get": {
+        "summary": "Get daily generation quota and remaining attempts",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Quota information"
+          }
+        }
+      }
+    },
+    "/generate/{id}/status": {
+      "get": {
+        "summary": "Get generation status for polling",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Generation status"
+          }
+        }
+      }
+    },
+    "/generate/{id}": {
+      "get": {
+        "summary": "Get complete generation details, tailored content, and PDF signed URLs",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Generation details"
+          }
+        }
+      }
+    },
+    "/generate/{id}/pdf-url": {
+      "get": {
+        "summary": "Get temporary signed PDF URL for viewing or sharing",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Signed PDF download URL"
+          }
+        }
+      }
+    },
+    "/generate/{id}/cancel": {
+      "post": {
+        "summary": "Cancel in-flight generation",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Generation cancelled"
+          }
+        }
+      }
+    },
+    "/generate/{id}/retry": {
+      "post": {
+        "summary": "Re-queue failed generation",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Generation re-queued"
+          }
+        }
+      }
+    },
+    "/generate/{id}/ats-score": {
+      "get": {
+        "summary": "Retrieve computed ATS score and keyword matching",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ATS score details"
+          }
+        }
+      }
+    },
+    "/generate/{id}/content": {
+      "patch": {
+        "summary": "Manually edit tailored resume sections (summary, experience bullets, skills)",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated tailored content"
+          }
+        }
+      }
+    },
+    "/generate/{id}/rerender": {
+      "post": {
+        "summary": "Recompile resume without rerunning AI tailoring",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "templateId": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Recompiled resume details"
+          }
+        }
+      }
+    },
+    "/generate/{id}/content/reset": {
+      "post": {
+        "summary": "Reset manual edits back to initial AI-generated content",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reset tailored content"
+          }
+        }
+      }
+    },
+    "/resumes": {
+      "get": {
+        "summary": "List historical generated resumes with cursor pagination",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 20
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "templateId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated resume list"
+          }
+        }
+      }
+    },
+    "/resumes/{id}": {
+      "get": {
+        "summary": "Get full resume generation details",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resume details"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete resume and cascade storage file cleanup",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resume deleted"
+          }
+        }
+      }
+    },
+    "/resumes/{id}/download": {
+      "get": {
+        "summary": "Get short-lived signed download URL with sanitized filename",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pdf",
+                "tex"
+              ],
+              "default": "pdf"
+            }
+          },
+          {
+            "name": "expiresIn",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 300
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Signed download URL"
+          }
+        }
+      }
+    },
+    "/resumes/{id}/reuse": {
+      "post": {
+        "summary": "Reuse historical job requirements for a new generation",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "templateId": {
+                    "type": "string"
+                  },
+                  "targetPageCount": {
+                    "type": "integer"
+                  },
+                  "jobDescription": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Reused generation queued"
+          }
+        }
+      }
+    },
+    "/dashboard/summary": {
+      "get": {
+        "summary": "Aggregate dashboard metrics and recent resumes",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dashboard summary statistics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardSummary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pdf/inspect": {
+      "post": {
+        "summary": "Standalone PDF extraction and ATS compliance audit",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "jobDescription": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "PDF inspection report"
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Process Liveness Probe",
+        "responses": {
+          "200": {
+            "description": "Server is alive"
+          }
+        }
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "summary": "Readiness Probe & Queue Telemetry",
+        "responses": {
+          "200": {
+            "description": "All systems healthy"
+          },
+          "503": {
+            "description": "Database or queue degraded"
+          }
+        }
+      }
+    },
+    "/metrics": {
+      "get": {
+        "summary": "Monitoring Metrics & Alerts",
+        "responses": {
+          "200": {
+            "description": "Current system snapshot"
+          }
+        }
+      }
+    }
+  }
+}
