@@ -13,14 +13,14 @@ WORKDIR /app
 
 # Install minimal required TeX Live distribution and utility packages
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    texlive-latex-base \
-    texlive-latex-recommended \
-    texlive-latex-extra \
-    texlive-fonts-recommended \
-    cm-super \
-    ghostscript \
-    ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+  texlive-latex-base \
+  texlive-latex-recommended \
+  texlive-latex-extra \
+  texlive-fonts-recommended \
+  cm-super \
+  ghostscript \
+  ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
 
 # Copy paranoid texmf configuration to prevent shell escape and file access
 COPY texmf.cnf /usr/share/texmf/web2c/texmf.cnf
