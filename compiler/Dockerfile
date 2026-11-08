@@ -4,7 +4,7 @@
 FROM node:22-bookworm-slim AS builder
 WORKDIR /app
 COPY package*.json tsconfig.json ./
-RUN npm ci
+RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
 COPY src ./src
 RUN npm run build
 
@@ -30,7 +30,7 @@ ENV TEXMFCNF=/usr/share/texmf/web2c/
 RUN groupadd -g 1001 latexapp && useradd -u 1001 -g latexapp -m latexapp
 
 COPY package*.json ./
-RUN npm ci --omit=dev
+RUN if [ -f package-lock.json ]; then npm ci --omit=dev; else npm install --omit=dev; fi
 
 COPY --from=builder /app/dist ./dist
 
