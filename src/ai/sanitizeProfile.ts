@@ -82,7 +82,7 @@ export function buildSanitizedProfile(profile: FullProfile): SanitizedProfile {
       gpa: edu.gpa || undefined,
       honors: edu.honors || undefined,
     })),
-    skills: (profile.skills || []).map((sk) => ({
+    skills: (profile.skills || []).slice(0, 30).map((sk) => ({
       id: sk.id,
       name: sk.name,
       category: sk.category,

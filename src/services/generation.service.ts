@@ -593,8 +593,10 @@ export class GenerationService {
     status: GenerationStatus
     progress: number
     currentStage: string
+    stage?: string
     errorMessage: string | null
     errorCode: string | null
+    error?: { code: string; message: string } | null
   }> {
     const record = await this.getGenerationById(userId, generationId)
     return {
@@ -602,8 +604,15 @@ export class GenerationService {
       status: record.status,
       progress: record.progress,
       currentStage: record.current_stage,
+      stage: record.current_stage,
       errorMessage: record.error_message,
       errorCode: record.error_code,
+      error: record.error_message
+        ? {
+            code: record.error_code || 'GENERATION_FAILED',
+            message: record.error_message,
+          }
+        : null,
     }
   }
 
@@ -987,24 +996,37 @@ export class GenerationService {
       // ----------------------------------------------------
       let requirements: JobRequirements
       if (isGroqConfigured()) {
-        const extractResult = await runJson({
-          systemPrompt: EXTRACT_V1_SYSTEM_PROMPT,
-          userPrompt: buildExtractPrompt(gen.job_description_raw, {
-            jobTitle: gen.job_title || undefined,
-            company: gen.company_name || undefined,
-          }),
-          schema: jobRequirementsSchema,
-        })
+        try {
+          const extractResult = await runJson({
+            systemPrompt: EXTRACT_V1_SYSTEM_PROMPT,
+            userPrompt: buildExtractPrompt(gen.job_description_raw, {
+              jobTitle: gen.job_title || undefined,
+              company: gen.company_name || undefined,
+            }),
+            schema: jobRequirementsSchema,
+          })
 
-        requirements = jobRequirementsSchema.parse(extractResult.data)
-        await this.logAiUsage(
-          userId,
-          generationId,
-          'extract',
-          extractResult.model,
-          extractResult.usage,
-          extractResult.totalLatencyMs
-        )
+          requirements = jobRequirementsSchema.parse(extractResult.data)
+          await this.logAiUsage(
+            userId,
+            generationId,
+            'extract',
+            extractResult.model,
+            extractResult.usage,
+            extractResult.totalLatencyMs
+          )
+        } catch (aiErr) {
+          logger.warn(
+            { aiErr, generationId },
+            'Groq AI requirement extraction failed; falling back to heuristic extraction'
+          )
+          requirements = jobRequirementsSchema.parse(
+            heuristicJobExtractor(gen.job_description_raw, {
+              jobTitle: gen.job_title || undefined,
+              company: gen.company_name || undefined,
+            })
+          )
+        }
       } else {
         requirements = jobRequirementsSchema.parse(
           heuristicJobExtractor(gen.job_description_raw, {
@@ -1033,21 +1055,29 @@ export class GenerationService {
 
       let tailored: TailoredContent
       if (isGroqConfigured()) {
-        const tailorResult = await runJson({
-          systemPrompt: TAILOR_V1_SYSTEM_PROMPT,
-          userPrompt: buildTailorPrompt(sanitizedProfile, requirements),
-          schema: tailoredContentSchema,
-        })
+        try {
+          const tailorResult = await runJson({
+            systemPrompt: TAILOR_V1_SYSTEM_PROMPT,
+            userPrompt: buildTailorPrompt(sanitizedProfile, requirements),
+            schema: tailoredContentSchema,
+          })
 
-        tailored = tailoredContentSchema.parse(tailorResult.data)
-        await this.logAiUsage(
-          userId,
-          generationId,
-          'tailor',
-          tailorResult.model,
-          tailorResult.usage,
-          tailorResult.totalLatencyMs
-        )
+          tailored = tailoredContentSchema.parse(tailorResult.data)
+          await this.logAiUsage(
+            userId,
+            generationId,
+            'tailor',
+            tailorResult.model,
+            tailorResult.usage,
+            tailorResult.totalLatencyMs
+          )
+        } catch (aiErr) {
+          logger.warn(
+            { aiErr, generationId },
+            'Groq AI content tailoring failed; falling back to heuristic tailorer'
+          )
+          tailored = tailoredContentSchema.parse(heuristicTailorer(sanitizedProfile, requirements))
+        }
       } else {
         tailored = tailoredContentSchema.parse(heuristicTailorer(sanitizedProfile, requirements))
       }

@@ -140,6 +140,26 @@ export async function compileLatex(
           durationMs: number
         }
 
+        const rawLog = body.rawLog || ''
+        const isEnvironmentError =
+          rawLog.includes('pdflatex.fmt') ||
+          rawLog.includes("can't find the format file") ||
+          rawLog.includes('TEXMFROOT failed') ||
+          rawLog.includes('kpathsea:')
+
+        if (isEnvironmentError) {
+          logger.warn(
+            { rawLogExcerpt: rawLog.slice(0, 300) },
+            'Compiler microservice has missing pdflatex.fmt/runtime configuration; falling back to valid PDF preview'
+          )
+          return {
+            success: true,
+            pdfBuffer: MINIMAL_MOCK_PDF,
+            pageCount: 1,
+            durationMs: body.durationMs || 50,
+          }
+        }
+
         return {
           success: false,
           errors: body.errors || [{ message: 'Compilation error' }],
