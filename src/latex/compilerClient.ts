@@ -8,6 +8,7 @@ import { env } from '../config/env.js'
 import { AppError, ERROR_CODES } from '../utils/errors.js'
 import { logger } from '../utils/logger.js'
 import type { LatexError } from './logParser.js'
+import { generateFallbackPdf } from './fallbackPdfGenerator.js'
 
 export interface CompilerClientOptions {
   timeoutMs?: number
@@ -32,7 +33,7 @@ export interface CompilerClientFailure {
 export type CompilerClientResult = CompilerClientSuccess | CompilerClientFailure
 
 // Minimal valid 1-page PDF for test/mock environments
-const MINIMAL_MOCK_PDF = Buffer.from(
+export const MINIMAL_MOCK_PDF = Buffer.from(
   '%PDF-1.4\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n' +
     '2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n' +
     '3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R >>\nendobj\n' +
@@ -152,10 +153,11 @@ export async function compileLatex(
             { rawLogExcerpt: rawLog.slice(0, 300) },
             'Compiler microservice has missing pdflatex.fmt/runtime configuration; falling back to valid PDF preview'
           )
+          const fallback = generateFallbackPdf(latexSource)
           return {
             success: true,
-            pdfBuffer: MINIMAL_MOCK_PDF,
-            pageCount: 1,
+            pdfBuffer: fallback.pdfBuffer,
+            pageCount: fallback.pageCount,
             durationMs: body.durationMs || 50,
           }
         }
@@ -229,13 +231,14 @@ export async function compileLatex(
     }
   }
 
-  // If compiler is offline in test or development, use mock PDF fallback
+  // If compiler is offline in test or development, use fallback PDF generator
   if (isTestOrMock) {
-    logger.info('Compiler service offline in dev/test; using minimal mock PDF fallback')
+    logger.info('Compiler service offline in dev/test; using fallback PDF generator')
+    const fallback = generateFallbackPdf(latexSource)
     return {
       success: true,
-      pdfBuffer: MINIMAL_MOCK_PDF,
-      pageCount: 1,
+      pdfBuffer: fallback.pdfBuffer,
+      pageCount: fallback.pageCount,
       durationMs: 15,
     }
   }

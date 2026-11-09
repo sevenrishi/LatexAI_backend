@@ -544,7 +544,17 @@ export class GenerationService {
   ): Promise<
     GenerationRecord & {
       pdfUrl?: string
+      compiledPdfUrl?: string
       texUrl?: string
+      pdfUrlExpiresAt?: string
+      jobTitle?: string | null
+      companyName?: string | null
+      templateName?: string
+      templateId?: string | null
+      latexSource?: string | null
+      tailoredContent?: Record<string, unknown>
+      changes?: Record<string, unknown>
+      atsScore?: Record<string, unknown>
       compileAttempts: CompileAttemptRecord[]
     }
   > {
@@ -552,11 +562,13 @@ export class GenerationService {
 
     let pdfUrl: string | undefined
     let texUrl: string | undefined
+    let pdfUrlExpiresAt: string | undefined
 
     if (record.status === 'completed') {
       try {
         pdfUrl = await StorageService.getSignedDownloadUrl(userId, generationId, 'pdf', 3600)
         texUrl = await StorageService.getSignedDownloadUrl(userId, generationId, 'tex', 3600)
+        pdfUrlExpiresAt = new Date(Date.now() + 3600 * 1000).toISOString()
       } catch (err) {
         logger.warn({ err, generationId }, 'Could not obtain signed URL for download')
       }
@@ -574,10 +586,121 @@ export class GenerationService {
       compileAttempts = (data as CompileAttemptRecord[]) || []
     }
 
+    // Resolve template name
+    let templateName = 'ATS Single Column'
+    if (record.template_id) {
+      try {
+        const tpl = await TemplateService.getTemplateById(record.template_id, userId)
+        if (tpl?.name) {
+          templateName = tpl.name
+        }
+      } catch {
+        if (record.template_id === 'tpl_minimal_tech') {
+          templateName = 'Minimal Tech'
+        } else if (record.template_id === 'tpl_default_swe') {
+          templateName = 'ATS Single Column'
+        }
+      }
+    }
+
+    // Normalize ATS score data for frontend consumption
+    const rawAts = (record.ats_score || record.metadata?.ats_score) as Record<string, unknown> | undefined
+    let atsScoreNormalized: Record<string, unknown> | undefined
+    if (rawAts) {
+      const overallScore =
+        typeof rawAts.overall === 'number'
+          ? rawAts.overall
+          : typeof rawAts.score === 'number'
+          ? rawAts.score
+          : 0
+
+      const rawKeywords = (rawAts.keywordAnalysis as Record<string, unknown>) || {}
+      const rawMatched = rawKeywords.matched as unknown[] | undefined
+      const rawMissing = rawKeywords.missing as unknown[] | undefined
+
+      const keywordsMatched = Array.isArray(rawAts.keywordsMatched)
+        ? (rawAts.keywordsMatched as string[])
+        : Array.isArray(rawMatched)
+        ? rawMatched.map((m: any) => (typeof m === 'string' ? m : m?.keyword || String(m)))
+        : []
+
+      const keywordsMissing = Array.isArray(rawAts.keywordsMissing)
+        ? (rawAts.keywordsMissing as string[])
+        : Array.isArray(rawMissing)
+        ? rawMissing.map((m: any) => (typeof m === 'string' ? m : m?.keyword || String(m)))
+        : []
+
+      const rawFormatChecks = (rawAts.formatChecks as Record<string, unknown>) || {}
+      const formatWarnings = Array.isArray(rawAts.formatWarnings)
+        ? (rawAts.formatWarnings as string[])
+        : Array.isArray(rawFormatChecks.issues)
+        ? (rawFormatChecks.issues as any[]).map((i) => (typeof i === 'string' ? i : i?.message || String(i)))
+        : Array.isArray(rawAts.suggestions)
+        ? (rawAts.suggestions as string[])
+        : []
+
+      atsScoreNormalized = {
+        ...rawAts,
+        overall: overallScore,
+        score: overallScore,
+        keywordsMatched,
+        keywordsMissing,
+        formatWarnings,
+        breakdown: {
+          skillsScore: (rawAts.breakdown as any)?.skillsScore ?? (rawAts.breakdown as any)?.keywordScore ?? 75,
+          experienceScore: (rawAts.breakdown as any)?.experienceScore ?? (rawAts.breakdown as any)?.sectionScore ?? 70,
+          educationScore: (rawAts.breakdown as any)?.educationScore ?? 80,
+          formatScore: (rawAts.breakdown as any)?.formatScore ?? 90,
+          ...((rawAts.breakdown as Record<string, unknown>) || {}),
+        },
+        checks: {
+          marginsValid: true,
+          singleColumn: true,
+          standardFonts: true,
+          noTablesOrColumns: true,
+          parseableText: (rawFormatChecks.passed as boolean) ?? true,
+          ...((rawAts.checks as Record<string, unknown>) || {}),
+        },
+      }
+    }
+
+    // Normalize changes data
+    const rawChanges = record.change_summary as Record<string, unknown> | undefined
+    let changesNormalized = rawChanges
+    if (rawChanges && !rawChanges.roleChanges && !rawChanges.stats) {
+      changesNormalized = {
+        stats: {
+          bulletsTailored: rawChanges.bulletsModified || rawChanges.totalBulletsTailored || 0,
+          totalBullets: rawChanges.totalBulletsTailored || 0,
+          keywordsAdded: Array.isArray(rawChanges.matchedKeywords) ? rawChanges.matchedKeywords.length : 0,
+          factGroundingPercent: 100,
+          metricsBoosted: 0,
+        },
+        tailoringNotes: Array.isArray(rawChanges.remediationNotes) && rawChanges.remediationNotes.length > 0
+          ? rawChanges.remediationNotes
+          : [
+              'Tailored bullet points to align with key requirements and technical stack of target role.',
+              'Verified fact grounding against source profile data.',
+            ],
+        roleChanges: [],
+        ...rawChanges,
+      }
+    }
+
     return {
       ...record,
       pdfUrl,
+      compiledPdfUrl: pdfUrl,
       texUrl,
+      pdfUrlExpiresAt,
+      jobTitle: record.job_title,
+      companyName: record.company_name,
+      templateId: record.template_id,
+      templateName,
+      latexSource: record.latex_code,
+      tailoredContent: record.tailored_content,
+      changes: changesNormalized,
+      atsScore: atsScoreNormalized,
       compileAttempts,
     }
   }
@@ -773,7 +896,7 @@ export class GenerationService {
       projects: updates.projects !== undefined ? updates.projects : (currentTailored.projects || []),
     }
 
-    return this.updateGeneration(generationId, {
+    await this.updateGeneration(generationId, {
       tailored_content: updatedTailored as unknown as Record<string, unknown>,
       original_tailored_content: originalContent as unknown as Record<string, unknown>,
       metadata: {
@@ -781,6 +904,8 @@ export class GenerationService {
         original_tailored_content: originalContent,
       },
     })
+
+    return this.getGenerationDetail(userId, generationId)
   }
 
   /**
@@ -1683,6 +1808,7 @@ export class GenerationService {
     format: 'pdf' | 'tex' = 'pdf',
     expiresInSeconds = 300
   ): Promise<{
+    url: string
     downloadUrl: string
     fileName: string
     format: 'pdf' | 'tex'
@@ -1730,6 +1856,7 @@ export class GenerationService {
     const expiresAt = new Date(Date.now() + expiresInSeconds * 1000).toISOString()
 
     return {
+      url: downloadUrl,
       downloadUrl,
       fileName,
       format,

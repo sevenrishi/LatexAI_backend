@@ -59,8 +59,26 @@ describe('Phase J — History, Downloads, Dashboard, & Hardening', () => {
         id: userId,
         full_name: 'Jordan Belfort',
         email: 'tester_phase_j@example.com',
+        phone: '+1-555-0199',
+        location: 'New York, NY',
+        summary: 'Experienced distributed systems engineer specializing in high-concurrency cloud architectures.',
       },
-      skills: [{ id: 's1', name: 'TypeScript', category: 'Languages' }],
+      skills: [
+        { id: 's1', name: 'TypeScript', category: 'Languages' },
+        { id: 's2', name: 'Go', category: 'Languages' },
+        { id: 's3', name: 'PostgreSQL', category: 'Databases' },
+        { id: 's4', name: 'Docker', category: 'DevOps' },
+      ],
+      experience: [
+        {
+          id: 'exp1',
+          user_id: userId,
+          title: 'Software Engineer',
+          company: 'Acme',
+          start_date: '2022-01',
+          bullets: ['Built systems'],
+        },
+      ],
     })
 
     setMockCompilerHandler(async () => ({
@@ -249,7 +267,7 @@ describe('Phase J — History, Downloads, Dashboard, & Hardening', () => {
 
   describe('BE-6.05 - POST /api/v1/resumes/:id/reuse', () => {
     it('creates and queues a new generation from historical job requirements', async () => {
-      const gen = seedMockGeneration('gen-reuse-src', {
+      const gen = seedMockGeneration('a0000000-0000-4000-8000-000000000001', {
         status: 'completed',
         job_title: 'Go Engineer',
         company_name: 'Google',
