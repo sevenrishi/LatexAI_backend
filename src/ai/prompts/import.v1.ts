@@ -258,8 +258,14 @@ export function heuristicResumeParser(rawText: string): ResumeImportParsedData {
   const linkedinMatch = rawText.match(/(?:https?:\/\/)?(?:www\.)?linkedin\.com\/in\/([a-zA-Z0-9_-]+)/i)
   const websiteMatch = rawText.match(/(?:https?:\/\/)(?!github\.com|linkedin\.com)[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:\/[^\s]*)?/i)
 
-  const fullName = lines.length > 0 ? lines[0]!.replace(/[^a-zA-Z\s.'-]/g, '').trim() : 'Candidate'
-  const headline = lines[1] && lines[1].length < 80 && !lines[1].includes('@') ? lines[1] : 'Software Engineer'
+  const fullName = lines.length > 0 ? lines[0]!.replace(/[^a-zA-Z\s.'-]/g, '').trim() : ''
+  const headline = lines[1] && lines[1].length < 80 && !lines[1].includes('@') ? lines[1] : ''
+
+  let location = ''
+  const locationMatch = rawText.match(/\b([A-Z][a-zA-Z\s]+,\s*(?:[A-Z]{2}|[A-Z][a-zA-Z]+))\b/)
+  if (locationMatch && locationMatch[1] && !/experience|education|university|college/i.test(locationMatch[1])) {
+    location = locationMatch[1].trim()
+  }
 
   // 2. Identify Section Offsets
   const sectionHeaders: Array<{ section: string; index: number }> = []
@@ -478,46 +484,19 @@ export function heuristicResumeParser(rawText: string): ResumeImportParsedData {
 
   return {
     contact: {
-      fullName: fullName || 'Candidate',
-      headline: headline || 'Software Engineer',
+      fullName: fullName || '',
+      headline: headline || '',
       email: emailMatch ? emailMatch[0] : '',
       phone: phoneMatch ? phoneMatch[0] : '',
-      location: 'Remote',
+      location: location || '',
       website: websiteMatch ? websiteMatch[0] : '',
       linkedin: linkedinMatch ? (linkedinMatch[0].startsWith('http') ? linkedinMatch[0] : `https://${linkedinMatch[0]}`) : '',
       github: githubMatch ? (githubMatch[0].startsWith('http') ? githubMatch[0] : `https://${githubMatch[0]}`) : '',
     },
     summary,
-    experience: experience.length > 0 ? experience : [
-      {
-        id: uuidv4(),
-        company: 'Technology Company',
-        title: headline,
-        location: 'Remote',
-        startDate: '2022-01',
-        endDate: null,
-        current: true,
-        bullets: [{ id: uuidv4(), text: 'Delivered software engineering projects and maintained application architecture.' }],
-      },
-    ],
-    education: education.length > 0 ? education : [
-      {
-        id: uuidv4(),
-        institution: 'University',
-        degree: 'Bachelor of Science',
-        fieldOfStudy: 'Computer Science',
-        location: '',
-        startDate: '2018-09',
-        endDate: '2022-05',
-        current: false,
-        gpa: '',
-        honors: '',
-      },
-    ],
-    skills: extractedSkills.length > 0 ? extractedSkills : [
-      { id: uuidv4(), name: 'TypeScript', category: 'Languages' },
-      { id: uuidv4(), name: 'Node.js', category: 'Backend' },
-    ],
+    experience,
+    education,
+    skills: extractedSkills,
     certifications,
     projects,
   }

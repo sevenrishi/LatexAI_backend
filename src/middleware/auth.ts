@@ -109,8 +109,8 @@ function createAuthMiddleware(options: RequireAuthOptions) {
         )
       }
 
-      // Email verification check
-      if (options.requireEmailVerified && !isEmailVerified) {
+      // Email verification check (bypassed in development for smooth local testing)
+      if (options.requireEmailVerified && !isEmailVerified && env.NODE_ENV !== 'development') {
         throw new AppError(
           403,
           ERROR_CODES.EMAIL_NOT_VERIFIED,

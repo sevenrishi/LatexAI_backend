@@ -144,6 +144,118 @@ describe('Profile CRUD & Completeness (Phase B)', () => {
     })
   })
 
+  describe('Resume Import Confirmation (BE-2.16)', () => {
+    it('applies all imported sections and overrides without reverting to dummy data', async () => {
+      const token = await generateTestToken({ sub: 'usr_import_real_999', email: 'real999@example.com' })
+      const importPayload = {
+        strategy: 'replace' as const,
+        overrides: {
+          contact: {
+            fullName: 'Jane Doe',
+            headline: 'Senior Full Stack Engineer',
+            email: 'real999@example.com',
+            phone: '+1 555 987 6543',
+            location: 'San Francisco, CA',
+            website: 'https://janedoe.dev',
+            linkedin: 'https://linkedin.com/in/janedoe',
+            github: 'https://github.com/janedoe',
+          },
+          summary: 'Experienced engineer with expertise in distributed systems.',
+          experience: [
+            {
+              company: 'Cloud Corp',
+              title: 'Principal Engineer',
+              location: 'San Francisco, CA',
+              startDate: '2022-01',
+              endDate: null,
+              current: true,
+              bullets: ['Architected core infrastructure.', 'Led a team of 10 engineers.'],
+            },
+          ],
+          education: [
+            {
+              institution: 'UC Berkeley',
+              degree: 'Bachelor of Science',
+              fieldOfStudy: 'Computer Science',
+              startDate: '2016-09',
+              endDate: '2020-05',
+              current: false,
+              grade: '3.9 GPA',
+            },
+          ],
+          skills: [
+            { name: 'TypeScript', category: 'Languages' },
+            { name: 'Node.js', category: 'Backend' },
+          ],
+          certifications: [
+            {
+              name: 'AWS Solutions Architect',
+              issuer: 'Amazon Web Services',
+              issueDate: '2023-05',
+              url: 'https://aws.cert/12345',
+            },
+          ],
+          projects: [
+            {
+              title: 'Open Source Engine',
+              role: 'Creator & Maintainer',
+              url: 'https://github.com/janedoe/engine',
+              startDate: '2021-01',
+              endDate: '2022-01',
+              bullets: ['Reached 5,000 GitHub stars.'],
+            },
+          ],
+        },
+      }
+
+      const res = await request(app)
+        .post('/api/v1/profile/import-resume/imp_real_test/confirm')
+        .set('Authorization', `Bearer ${token}`)
+        .send(importPayload)
+
+      expect(res.status).toBe(200)
+      expect(res.body.success).toBe(true)
+      const data = res.body.data
+
+      // Ensure profile matches Jane Doe, NOT dummy Alex Morgan
+      expect(data.fullName).toBe('Jane Doe')
+      expect(data.headline).toBe('Senior Full Stack Engineer')
+      expect(data.email).toBe('real999@example.com')
+      expect(data.phone).toBe('+1 555 987 6543')
+      expect(data.location).toBe('San Francisco, CA')
+      expect(data.website).toBe('https://janedoe.dev')
+      expect(data.linkedin).toBe('https://linkedin.com/in/janedoe')
+      expect(data.github).toBe('https://github.com/janedoe')
+      expect(data.summary).toBe('Experienced engineer with expertise in distributed systems.')
+
+      // Check experience
+      expect(data.experience.length).toBe(1)
+      expect(data.experience[0].company).toBe('Cloud Corp')
+      expect(data.experience[0].title).toBe('Principal Engineer')
+      expect(data.experience[0].bullets.length).toBe(2)
+      expect(data.experience[0].bullets[0].text).toBe('Architected core infrastructure.')
+
+      // Check education
+      expect(data.education.length).toBe(1)
+      expect(data.education[0].institution).toBe('UC Berkeley')
+      expect(data.education[0].degree).toBe('Bachelor of Science')
+
+      // Check skills
+      expect(data.skills.length).toBe(2)
+      const skillNames = data.skills.map((s: { name: string }) => s.name)
+      expect(skillNames).toContain('TypeScript')
+      expect(skillNames).toContain('Node.js')
+
+      // Check certifications
+      expect(data.certifications.length).toBe(1)
+      expect(data.certifications[0].name).toBe('AWS Solutions Architect')
+
+      // Check projects
+      expect(data.projects.length).toBe(1)
+      expect(data.projects[0].title).toBe('Open Source Engine')
+    })
+  })
+
   describe('Cross-User Isolation & Validation Guards (BE-2.10)', () => {
     it('rejects access to unknown section names with 400 Bad Request', async () => {
       const token = await generateTestToken({ sub: 'usr_prof_101' })
