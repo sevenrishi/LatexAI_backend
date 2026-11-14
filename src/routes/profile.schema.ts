@@ -96,6 +96,7 @@ export const projectSchema = z.object({
 export const updateProfileSchema = z.object({
   fullName: z.string().max(100).optional(),
   headline: z.string().max(200).optional(),
+  email: z.string().email().max(150).optional(),
   phone: z.string().max(30).optional(),
   location: z.string().max(100).optional(),
   summary: z.string().max(2000).optional(),

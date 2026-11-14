@@ -124,11 +124,11 @@ export function heuristicTailorer(
 
 export function buildTailorPrompt(sanitizedProfile: unknown, jobRequirements: unknown): string {
   return `<<<CANDIDATE_PROFILE>>>
-${JSON.stringify(sanitizedProfile, null, 2)}
+${JSON.stringify(sanitizedProfile)}
 <<<END_CANDIDATE_PROFILE>>>
 
 <<<TARGET_JOB_REQUIREMENTS>>>
-${JSON.stringify(jobRequirements, null, 2)}
+${JSON.stringify(jobRequirements)}
 <<<END_TARGET_JOB_REQUIREMENTS>>>
 
 Tailor the candidate profile to match the job requirements, strictly following all grounding and traceability rules. Return valid JSON.`

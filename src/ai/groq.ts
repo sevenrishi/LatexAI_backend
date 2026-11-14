@@ -112,23 +112,31 @@ export async function callGroqChat(options: GroqCallOptions): Promise<GroqCallRe
       const latencyMs = Date.now() - startTime
       const errorObj = err as Record<string, unknown>
       const status = typeof errorObj.status === 'number' ? errorObj.status : 500
-      const isRetryable = status === 429 || (status >= 500 && status <= 599)
+      const errMessage = (err as Error).message || ''
+      const isRateLimit =
+        status === 429 ||
+        (status === 413 &&
+          (errMessage.includes('rate_limit_exceeded') ||
+            errMessage.includes('tokens per minute') ||
+            errMessage.includes('TPM')))
+      const isRetryable = isRateLimit || (status >= 500 && status <= 599)
 
       logger.warn(
-        { attempt, maxRetries, status, latencyMs, err: (err as Error).message },
+        { attempt, maxRetries, status, latencyMs, isRateLimit, err: errMessage },
         'Groq API call failed'
       )
 
       if (attempt > maxRetries || !isRetryable) {
-        throw AppError.internal(`Groq API request failed (${status}): ${(err as Error).message}`, {
+        throw AppError.internal(`Groq API request failed (${status}): ${errMessage}`, {
           status,
-          originalError: (err as Error).message,
+          originalError: errMessage,
         })
       }
 
-      // Exponential backoff with jitter
-      const jitter = Math.floor(Math.random() * 300)
-      await new Promise((resolve) => setTimeout(resolve, delayMs + jitter))
+      // If rate limited on tokens per minute (TPM), wait for rolling bucket to refresh
+      const baseDelay = isRateLimit ? Math.max(delayMs, 5000) : delayMs
+      const jitter = Math.floor(Math.random() * 500)
+      await new Promise((resolve) => setTimeout(resolve, baseDelay + jitter))
       delayMs *= 2
     }
   }
