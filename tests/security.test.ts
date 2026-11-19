@@ -32,4 +32,14 @@ describe('Security Stack & Middleware (BE-0.06)', () => {
     expect(res.headers['access-control-allow-origin']).toBe('http://localhost:5173')
     expect(res.headers['access-control-allow-credentials']).toBe('true')
   })
+
+  it('allows production frontend origin https://latexai.sevenrishi.tech', async () => {
+    const res = await request(app)
+      .options('/api/v1/health')
+      .set('Origin', 'https://latexai.sevenrishi.tech')
+      .set('Access-Control-Request-Method', 'GET')
+
+    expect(res.headers['access-control-allow-origin']).toBe('https://latexai.sevenrishi.tech')
+    expect(res.headers['access-control-allow-credentials']).toBe('true')
+  })
 })

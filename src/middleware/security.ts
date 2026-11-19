@@ -56,6 +56,18 @@ export function configureSecurityMiddlewares(app: Express): void {
         if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
           return callback(null, true)
         }
+        // Allow any local development origin (localhost or 127.0.0.1 on any port)
+        if (/^https?:\/\/(localhost|127\.0\.0\.1)(:[0-9]+)?$/.test(origin)) {
+          return callback(null, true)
+        }
+        // Allow deployed domain and subdomains on sevenrishi.tech
+        if (/^https:\/\/([a-z0-9-]+\.)*sevenrishi\.tech$/.test(origin)) {
+          return callback(null, true)
+        }
+        // Allow Vercel or Netlify preview/production domains
+        if (/^https:\/\/([a-z0-9-]+\.)*(vercel\.app|netlify\.app|onrender\.com)$/.test(origin)) {
+          return callback(null, true)
+        }
         return callback(
           new AppError(403, 'CORS_NOT_ALLOWED', `Origin ${origin} not allowed by CORS`)
         )
