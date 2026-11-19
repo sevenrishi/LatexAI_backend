@@ -12,7 +12,7 @@ const envSchema = z.object({
     .transform((val) => parseInt(val, 10))
     .pipe(z.number().positive()),
   API_PREFIX: z.string().default('/api/v1'),
-  CORS_ORIGIN: z.string().default('http://localhost:5173,http://localhost:3000'),
+  CORS_ORIGIN: z.string().default('http://localhost:5173,http://localhost:3000,https://latexai.sevenrishi.tech'),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   RATE_LIMIT_WINDOW_MS: z
     .string()
