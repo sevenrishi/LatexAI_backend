@@ -1,7 +1,4 @@
-import dns from 'node:dns'
-try {
-  dns.setDefaultResultOrder('ipv4first')
-} catch { }
+import '../config/network.js'
 
 import { createClient, type SupabaseClient, type PostgrestError } from '@supabase/supabase-js'
 import { env } from '../config/env.js'
@@ -66,19 +63,23 @@ export async function checkDbConnection(): Promise<DbConnectionCheckResult> {
       }
 
       // 2. Direct REST API ping fallback
-      const pingRes = await fetch(`${env.SUPABASE_URL}/rest/v1/`, {
-        method: 'GET',
-        headers: {
-          apikey: env.SUPABASE_SERVICE_ROLE_KEY,
-          Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
-        },
-      })
+      try {
+        const pingRes = await fetch(`${env.SUPABASE_URL}/rest/v1/`, {
+          method: 'GET',
+          headers: {
+            apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+            Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+          },
+        })
 
-      if (pingRes.ok || pingRes.status === 200 || pingRes.status === 401) {
-        return { ok: true }
+        if (pingRes.ok || pingRes.status === 200 || pingRes.status === 401) {
+          return { ok: true }
+        }
+
+        return { ok: false, error: `Supabase REST returned HTTP ${pingRes.status}` }
+      } catch (pingErr) {
+        return { ok: false, error: pingErr instanceof Error ? pingErr.message : String(pingErr) }
       }
-
-      return { ok: false, error: `Supabase REST returned HTTP ${pingRes.status}` }
     })()
 
     const result = await Promise.race([queryPromise, timeoutPromise])
