@@ -1,4 +1,4 @@
-import '../config/network.js'
+import { ipv4Fetch } from '../config/network.js'
 
 import { createClient, type SupabaseClient, type PostgrestError } from '@supabase/supabase-js'
 import { env } from '../config/env.js'
@@ -14,6 +14,9 @@ export function getSupabaseAdmin(): SupabaseClient {
         persistSession: false,
         autoRefreshToken: false,
         detectSessionInUrl: false,
+      },
+      global: {
+        fetch: ipv4Fetch as typeof fetch,
       },
     })
   }
@@ -50,10 +53,7 @@ export async function checkDbConnection(): Promise<DbConnectionCheckResult> {
     const queryPromise = (async () => {
       // 1. Try selecting 1 row from profiles using Supabase client
       try {
-        const { error } = await supabaseAdmin
-          .from('profiles')
-          .select('id')
-          .limit(1)
+        const { error } = await supabaseAdmin.from('profiles').select('id').limit(1)
 
         if (!error || error.code === 'PGRST116' || error.code === '42P01') {
           return { ok: true }
@@ -62,9 +62,9 @@ export async function checkDbConnection(): Promise<DbConnectionCheckResult> {
         // Fall back to direct REST ping
       }
 
-      // 2. Direct REST API ping fallback
+      // 2. Direct REST API ping fallback using ipv4Fetch
       try {
-        const pingRes = await fetch(`${env.SUPABASE_URL}/rest/v1/`, {
+        const pingRes = await ipv4Fetch(`${env.SUPABASE_URL}/rest/v1/`, {
           method: 'GET',
           headers: {
             apikey: env.SUPABASE_SERVICE_ROLE_KEY,

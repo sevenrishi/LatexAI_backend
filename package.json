@@ -33,8 +33,10 @@
     "multer": "^2.4.0",
     "p-queue": "^9.3.3",
     "pdf-parse": "^2.4.5",
+    "pdfjs-dist": "^5.4.296",
     "pino": "^9.6.0",
     "pino-http": "^10.4.0",
+    "typescript": "^5.7.3",
     "undici": "^7.30.0",
     "uuid": "^11.1.0",
     "zod": "^3.24.2"
@@ -57,7 +59,6 @@
     "prettier": "^3.5.2",
     "supertest": "^7.0.0",
     "tsx": "^4.19.3",
-    "typescript": "^5.7.3",
     "typescript-eslint": "^8.25.0",
     "vitest": "^3.0.7"
   },
