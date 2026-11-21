@@ -29,12 +29,9 @@ export const ipv4Fetch = (
   input: string | URL | Request,
   init?: Record<string, unknown>
 ): Promise<Response> => {
-  const fetchFn = undiciFetch as unknown as typeof fetch
-  return fetchFn(
-    input as string,
-    {
-      ...(init as RequestInit),
-      dispatcher: ipv4Agent,
-    } as RequestInit
-  )
+  const fetchFn = undiciFetch as unknown as (url: unknown, options?: unknown) => Promise<Response>
+  return fetchFn(input, {
+    ...init,
+    dispatcher: ipv4Agent,
+  })
 }
