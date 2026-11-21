@@ -1,3 +1,8 @@
+import dns from 'node:dns'
+try {
+  dns.setDefaultResultOrder('ipv4first')
+} catch {}
+
 import express, { type Express } from 'express'
 import { env } from './config/env.js'
 import { configureSecurityMiddlewares } from './middleware/security.js'

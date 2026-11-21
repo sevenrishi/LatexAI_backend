@@ -1,3 +1,8 @@
+import dns from 'node:dns'
+try {
+  dns.setDefaultResultOrder('ipv4first')
+} catch {}
+
 import http from 'node:http'
 import { app } from './app.js'
 import { env } from './config/env.js'
