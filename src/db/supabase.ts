@@ -1,3 +1,8 @@
+import dns from 'node:dns'
+try {
+  dns.setDefaultResultOrder('ipv4first')
+} catch { }
+
 import { createClient, type SupabaseClient, type PostgrestError } from '@supabase/supabase-js'
 import { env } from '../config/env.js'
 import { AppError, ERROR_CODES } from '../utils/errors.js'
@@ -40,9 +45,19 @@ export async function checkDbConnection(): Promise<DbConnectionCheckResult> {
       }
     }
 
-    const { error } = await supabaseAdmin
+    // Use a lightweight limit(1) query with an explicit 4s timeout to prevent undici HEAD hanging
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('Database health check timed out after 4000ms')), 4000)
+    )
+
+    const queryPromise = supabaseAdmin
       .from('profiles')
-      .select('count', { count: 'exact', head: true })
+      .select('id')
+      .limit(1)
+
+    const { error } = (await Promise.race([queryPromise, timeoutPromise])) as {
+      error: PostgrestError | null
+    }
     const latencyMs = Date.now() - start
 
     if (error && error.code !== 'PGRST116' && error.code !== '42P01') {
