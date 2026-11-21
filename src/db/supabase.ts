@@ -45,27 +45,50 @@ export async function checkDbConnection(): Promise<DbConnectionCheckResult> {
       }
     }
 
-    // Use a lightweight limit(1) query with an explicit 4s timeout to prevent undici HEAD hanging
+    // Use a lightweight limit(1) query with an explicit 10s timeout and REST fallback
     const timeoutPromise = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('Database health check timed out after 4000ms')), 4000)
+      setTimeout(() => reject(new Error('Database health check timed out after 10000ms')), 10000)
     )
 
-    const queryPromise = supabaseAdmin
-      .from('profiles')
-      .select('id')
-      .limit(1)
+    const queryPromise = (async () => {
+      // 1. Try selecting 1 row from profiles using Supabase client
+      try {
+        const { error } = await supabaseAdmin
+          .from('profiles')
+          .select('id')
+          .limit(1)
 
-    const { error } = (await Promise.race([queryPromise, timeoutPromise])) as {
-      error: PostgrestError | null
-    }
+        if (!error || error.code === 'PGRST116' || error.code === '42P01') {
+          return { ok: true }
+        }
+      } catch {
+        // Fall back to direct REST ping
+      }
+
+      // 2. Direct REST API ping fallback
+      const pingRes = await fetch(`${env.SUPABASE_URL}/rest/v1/`, {
+        method: 'GET',
+        headers: {
+          apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+          Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+        },
+      })
+
+      if (pingRes.ok || pingRes.status === 200 || pingRes.status === 401) {
+        return { ok: true }
+      }
+
+      return { ok: false, error: `Supabase REST returned HTTP ${pingRes.status}` }
+    })()
+
+    const result = await Promise.race([queryPromise, timeoutPromise])
     const latencyMs = Date.now() - start
 
-    if (error && error.code !== 'PGRST116' && error.code !== '42P01') {
-      logger.warn({ error }, 'Database health check query returned error')
+    if (!result.ok) {
       return {
         connected: false,
         latencyMs,
-        error: error.message,
+        error: result.error || 'Database connection check failed',
       }
     }
 
