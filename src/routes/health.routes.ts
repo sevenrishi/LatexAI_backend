@@ -17,6 +17,7 @@ healthRouter.get('/health', (_req: Request, res: Response) => {
   res.status(200).json({
     status: 'ok',
     service: 'latexai-api',
+    version: '1.0.1-ipv4fix',
     uptime: Math.floor(process.uptime()),
     timestamp: new Date().toISOString(),
   })
