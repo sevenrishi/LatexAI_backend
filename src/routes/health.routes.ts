@@ -38,6 +38,12 @@ healthRouter.get('/health/ready', async (_req: Request, res: Response, next: Nex
         status: dbCheck.connected ? 'healthy' : 'unhealthy',
         latencyMs: dbCheck.latencyMs,
         ...(dbCheck.error ? { error: dbCheck.error } : {}),
+        ...('diagnostic' in dbCheck && dbCheck.diagnostic
+          ? { diagnostic: dbCheck.diagnostic }
+          : {}),
+        ...('diagnostic' in dbCheck && dbCheck.diagnostic
+          ? { diagnostic: dbCheck.diagnostic }
+          : {}),
       },
       queue: {
         status: queue.size + queue.pending > 50 ? 'degraded' : 'healthy',
@@ -51,6 +57,7 @@ healthRouter.get('/health/ready', async (_req: Request, res: Response, next: Nex
     if (!dbCheck.connected || hasCriticalAlert) {
       return res.status(503).json({
         status: 'unhealthy',
+        version: '1.0.3-resolve4',
         service: 'latexai-api',
         checks,
         alerts,
@@ -60,6 +67,7 @@ healthRouter.get('/health/ready', async (_req: Request, res: Response, next: Nex
 
     return res.status(200).json({
       status: 'ok',
+      version: '1.0.3-resolve4',
       service: 'latexai-api',
       checks,
       alerts,

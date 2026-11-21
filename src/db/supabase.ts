@@ -29,6 +29,11 @@ export interface DbConnectionCheckResult {
   connected: boolean
   latencyMs?: number
   error?: string
+  diagnostic?: {
+    supabaseHost?: string
+    protocol?: string
+    keyLength?: number
+  }
 }
 
 /**
@@ -36,12 +41,29 @@ export interface DbConnectionCheckResult {
  */
 export async function checkDbConnection(): Promise<DbConnectionCheckResult> {
   const start = Date.now()
+  let supabaseHost = 'unknown'
+  let supabaseProto = 'unknown'
+  try {
+    const parsed = new URL(env.SUPABASE_URL)
+    supabaseHost = parsed.hostname
+    supabaseProto = parsed.protocol
+  } catch {
+    // Ignore URL parse failure in fallback mode
+  }
+
+  const diagnostic = {
+    supabaseHost,
+    protocol: supabaseProto,
+    keyLength: env.SUPABASE_SERVICE_ROLE_KEY?.length || 0,
+  }
+
   try {
     // If running with placeholders in test/dev, return connected immediately
     if (env.SUPABASE_URL.includes('placeholder')) {
       return {
         connected: true,
         latencyMs: 1,
+        diagnostic,
       }
     }
 
@@ -53,13 +75,18 @@ export async function checkDbConnection(): Promise<DbConnectionCheckResult> {
     const queryPromise = (async () => {
       // 1. Try selecting 1 row from profiles using Supabase client
       try {
-        const { error } = await supabaseAdmin.from('profiles').select('id').limit(1)
+        const queryResult = await supabaseAdmin.from('profiles').select('id').limit(1)
 
-        if (!error || error.code === 'PGRST116' || error.code === '42P01') {
+        if (
+          !queryResult.error ||
+          queryResult.error.code === 'PGRST116' ||
+          queryResult.error.code === '42P01'
+        ) {
           return { ok: true }
         }
-      } catch {
-        // Fall back to direct REST ping
+        logger.warn({ err: queryResult.error }, 'Supabase client query returned non-success')
+      } catch (clientErr) {
+        logger.warn({ err: clientErr }, 'Supabase client query threw exception')
       }
 
       // 2. Direct REST API ping fallback using ipv4Fetch
@@ -78,7 +105,16 @@ export async function checkDbConnection(): Promise<DbConnectionCheckResult> {
 
         return { ok: false, error: `Supabase REST returned HTTP ${pingRes.status}` }
       } catch (pingErr) {
-        return { ok: false, error: pingErr instanceof Error ? pingErr.message : String(pingErr) }
+        const cause = (pingErr as { cause?: unknown })?.cause
+        const causeMsg = cause
+          ? typeof cause === 'object' && cause !== null && 'message' in cause
+            ? String((cause as { message: unknown }).message)
+            : String(cause)
+          : null
+        const fullErr = causeMsg
+          ? `${(pingErr as Error).message} (${causeMsg})`
+          : (pingErr as Error).message
+        return { ok: false, error: fullErr }
       }
     })()
 
@@ -90,21 +126,30 @@ export async function checkDbConnection(): Promise<DbConnectionCheckResult> {
         connected: false,
         latencyMs,
         error: result.error || 'Database connection check failed',
+        diagnostic,
       }
     }
 
     return {
       connected: true,
       latencyMs,
+      diagnostic,
     }
   } catch (err) {
     const latencyMs = Date.now() - start
-    const message = (err as Error).message
+    const cause = (err as { cause?: unknown })?.cause
+    const causeMsg = cause
+      ? typeof cause === 'object' && cause !== null && 'message' in cause
+        ? String((cause as { message: unknown }).message)
+        : String(cause)
+      : null
+    const message = causeMsg ? `${(err as Error).message} (${causeMsg})` : (err as Error).message
     logger.error({ err }, 'Database health check threw exception')
     return {
       connected: false,
       latencyMs,
       error: message,
+      diagnostic,
     }
   }
 }
