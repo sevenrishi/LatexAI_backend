@@ -1,4 +1,4 @@
-# Multi-stage production Dockerfile for LatexAI Backend API
+# Multi-stage production Dockerfile for Kolomly Backend API
 
 # 1. Base Stage
 FROM node:22-alpine AS base

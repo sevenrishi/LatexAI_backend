@@ -12,7 +12,10 @@ describe('Phase J — History, Downloads, Dashboard, & Hardening', () => {
   const userId = 'usr_phase_j_tester_123'
   let token: string
 
-  function seedMockGeneration(id: string, overrides: Partial<GenerationRecord> = {}): GenerationRecord {
+  function seedMockGeneration(
+    id: string,
+    overrides: Partial<GenerationRecord> = {}
+  ): GenerationRecord {
     const record: GenerationRecord = {
       id,
       user_id: userId,
@@ -61,7 +64,8 @@ describe('Phase J — History, Downloads, Dashboard, & Hardening', () => {
         email: 'tester_phase_j@example.com',
         phone: '+1-555-0199',
         location: 'New York, NY',
-        summary: 'Experienced distributed systems engineer specializing in high-concurrency cloud architectures.',
+        summary:
+          'Experienced distributed systems engineer specializing in high-concurrency cloud architectures.',
       },
       skills: [
         { id: 's1', name: 'TypeScript', category: 'Languages' },
@@ -92,9 +96,7 @@ describe('Phase J — History, Downloads, Dashboard, & Hardening', () => {
 
   describe('BE-6.01 - GET /api/v1/resumes history list & filtering', () => {
     it('returns empty list when user has no generations', async () => {
-      const res = await request(app)
-        .get('/api/v1/resumes')
-        .set('Authorization', `Bearer ${token}`)
+      const res = await request(app).get('/api/v1/resumes').set('Authorization', `Bearer ${token}`)
 
       expect(res.status).toBe(200)
       expect(res.body.success).toBe(true)
@@ -402,7 +404,7 @@ describe('Phase J — History, Downloads, Dashboard, & Hardening', () => {
       const res = await request(app).get('/api/v1/docs/openapi.json')
       expect(res.status).toBe(200)
       expect(res.body.openapi).toBe('3.1.0')
-      expect(res.body.info.title).toContain('LatexAI')
+      expect(res.body.info.title).toContain('Kolomly')
       expect(res.body.paths['/resumes']).toBeDefined()
       expect(res.body.paths['/dashboard/summary']).toBeDefined()
     })
@@ -411,7 +413,7 @@ describe('Phase J — History, Downloads, Dashboard, & Hardening', () => {
       const res = await request(app).get('/api/v1/docs')
       expect(res.status).toBe(200)
       expect(res.headers['content-type']).toContain('text/html')
-      expect(res.text).toContain('LatexAI Backend API Documentation')
+      expect(res.text).toContain('Kolomly Backend API Documentation')
     })
   })
 })

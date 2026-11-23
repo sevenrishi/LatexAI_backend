@@ -1,5 +1,5 @@
 /**
- * Official TypeScript Client SDK Bindings for LatexAI Backend API.
+ * Official TypeScript Client SDK Bindings for Kolomly Backend API.
  * Complies with task BE-7.05.
  */
 
@@ -31,10 +31,7 @@ export class LatexAiClient {
     this.token = token
   }
 
-  private async request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<ApiResponse<T>> {
+  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
     const url = `${this.baseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`
     const headers: Record<string, string> = {
       Accept: 'application/json',
@@ -110,19 +107,16 @@ export class LatexAiClient {
       sourceGenerationId?: string
     }) => this.request('/api/v1/generate', { method: 'POST', body: JSON.stringify(body) }),
 
-    getStatus: (id: string) =>
-      this.request(`/api/v1/generate/${id}/status`, { method: 'GET' }),
+    getStatus: (id: string) => this.request(`/api/v1/generate/${id}/status`, { method: 'GET' }),
 
     getDetail: (id: string) => this.request(`/api/v1/generate/${id}`, { method: 'GET' }),
 
     getAtsScore: (id: string) =>
       this.request(`/api/v1/generate/${id}/ats-score`, { method: 'GET' }),
 
-    cancel: (id: string) =>
-      this.request(`/api/v1/generate/${id}/cancel`, { method: 'POST' }),
+    cancel: (id: string) => this.request(`/api/v1/generate/${id}/cancel`, { method: 'POST' }),
 
-    retry: (id: string) =>
-      this.request(`/api/v1/generate/${id}/retry`, { method: 'POST' }),
+    retry: (id: string) => this.request(`/api/v1/generate/${id}/retry`, { method: 'POST' }),
 
     rerender: (id: string, body?: { templateId?: string }) =>
       this.request(`/api/v1/generate/${id}/rerender`, {

@@ -1,5 +1,5 @@
 -- Initial Migration: Enable Core PostgreSQL Extensions
--- Author: LatexAI Team
+-- Author: Kolomly Team
 -- Created: 2026-01-01
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA extensions;

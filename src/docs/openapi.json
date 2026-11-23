@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "LatexAI Backend API",
+    "title": "Kolomly Backend API",
     "version": "1.0.0",
     "description": "Production API for LaTeX AI resume generation, ATS scoring, LaTeX compilation, and candidate profile management."
   },
@@ -40,16 +40,10 @@
                 "type": "object"
               }
             },
-            "required": [
-              "code",
-              "message"
-            ]
+            "required": ["code", "message"]
           }
         },
-        "required": [
-          "success",
-          "error"
-        ]
+        "required": ["success", "error"]
       },
       "ResumeSummary": {
         "type": "object",
@@ -59,16 +53,10 @@
             "format": "uuid"
           },
           "jobTitle": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "companyName": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "status": {
             "type": "string"
@@ -77,25 +65,16 @@
             "type": "integer"
           },
           "templateId": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "pageCount": {
-            "type": [
-              "integer",
-              "null"
-            ]
+            "type": ["integer", "null"]
           },
           "targetPageCount": {
             "type": "integer"
           },
           "atsScore": {
-            "type": [
-              "number",
-              "null"
-            ]
+            "type": ["number", "null"]
           },
           "hasPdf": {
             "type": "boolean"
@@ -108,10 +87,7 @@
             "format": "date-time"
           },
           "completedAt": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "date-time"
           }
         }
@@ -135,10 +111,7 @@
                 "type": "integer"
               },
               "averageAtsScore": {
-                "type": [
-                  "number",
-                  "null"
-                ]
+                "type": ["number", "null"]
               }
             }
           },
@@ -216,10 +189,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "email",
-                  "password"
-                ]
+                "required": ["email", "password"]
               }
             }
           }
@@ -248,10 +218,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "email",
-                  "password"
-                ]
+                "required": ["email", "password"]
               }
             }
           }
@@ -360,9 +327,7 @@
                     "minLength": 8
                   }
                 },
-                "required": [
-                  "newPassword"
-                ]
+                "required": ["newPassword"]
               }
             }
           }
@@ -398,9 +363,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "token"
-                ]
+                "required": ["token"]
               }
             }
           }
@@ -520,13 +483,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "enum": [
-                "experience",
-                "education",
-                "skills",
-                "certifications",
-                "projects"
-              ]
+              "enum": ["experience", "education", "skills", "certifications", "projects"]
             }
           }
         ],
@@ -550,13 +507,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "enum": [
-                "experience",
-                "education",
-                "skills",
-                "certifications",
-                "projects"
-              ]
+              "enum": ["experience", "education", "skills", "certifications", "projects"]
             }
           }
         ],
@@ -670,9 +621,7 @@
                     }
                   }
                 },
-                "required": [
-                  "skills"
-                ]
+                "required": ["skills"]
               }
             }
           }
@@ -715,9 +664,7 @@
                     }
                   }
                 },
-                "required": [
-                  "orderedIds"
-                ]
+                "required": ["orderedIds"]
               }
             }
           }
@@ -748,9 +695,7 @@
                     "format": "binary"
                   }
                 },
-                "required": [
-                  "file"
-                ]
+                "required": ["file"]
               }
             }
           }
@@ -788,10 +733,7 @@
                 "properties": {
                   "strategy": {
                     "type": "string",
-                    "enum": [
-                      "merge",
-                      "replace"
-                    ],
+                    "enum": ["merge", "replace"],
                     "default": "merge"
                   }
                 }
@@ -868,10 +810,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "name",
-                  "latexCode"
-                ]
+                "required": ["name", "latexCode"]
               }
             }
           }
@@ -1087,9 +1026,7 @@
                     "format": "uri"
                   }
                 },
-                "required": [
-                  "url"
-                ]
+                "required": ["url"]
               }
             }
           }
@@ -1125,9 +1062,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "rawText"
-                ]
+                "required": ["rawText"]
               }
             }
           }
@@ -1199,9 +1134,7 @@
                     "format": "uri"
                   }
                 },
-                "required": [
-                  "url"
-                ]
+                "required": ["url"]
               }
             }
           }
@@ -1599,10 +1532,7 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": [
-                "pdf",
-                "tex"
-              ],
+              "enum": ["pdf", "tex"],
               "default": "pdf"
             }
           },

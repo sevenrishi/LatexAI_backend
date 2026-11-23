@@ -19,7 +19,7 @@ function getOpenApiSpec(): unknown {
     } else {
       openapiSpecCache = {
         openapi: '3.1.0',
-        info: { title: 'LatexAI API', version: '1.0.0' },
+        info: { title: 'Kolomly API', version: '1.0.0' },
         paths: {},
       }
     }
@@ -45,7 +45,7 @@ docsRouter.get('/', (_req: Request, res: Response) => {
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>LatexAI Backend API Documentation (OpenAPI 3.1)</title>
+  <title>Kolomly Backend API Documentation (OpenAPI 3.1)</title>
   <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui.css" />
   <style>
     body { margin: 0; background-color: #0f172a; color: #f8fafc; font-family: Inter, system-ui, sans-serif; }

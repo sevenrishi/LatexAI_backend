@@ -1,6 +1,6 @@
-# LatexAI Backend API
+# Kolomly Backend API
 
-A robust, type-safe REST API and background worker service powering the **LatexAI** platform — an AI-assisted LaTeX resume generation, ATS scoring, and document compilation system.
+A robust, type-safe REST API and background worker service powering the **Kolomly** platform — an AI-assisted LaTeX resume generation, ATS scoring, and document compilation system.
 
 ---
 
@@ -68,36 +68,41 @@ Copy `.env.example` to `.env` in the `backend/` directory:
 cp .env.example .env
 ```
 
-| Key | Description | Example |
-| :--- | :--- | :--- |
-| `PORT` | Port for the backend API | `4000` |
-| `NODE_ENV` | Application environment (`development` / `production`) | `development` |
-| `API_PREFIX` | Base prefix for all endpoints | `/api/v1` |
-| `CORS_ORIGIN` | Allowed CORS origins (comma-separated) | `http://localhost:5173,http://localhost:3000` |
-| `LOG_LEVEL` | Logging level (`debug`, `info`, `warn`, `error`) | `info` |
-| `SUPABASE_URL` | Supabase project URL | `https://your-project.supabase.co` |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role secret | `your-service-role-key` |
-| `SUPABASE_JWT_SECRET` | Supabase JWT secret for local token validation | `your-jwt-secret` |
-| `COMPILER_SERVICE_URL` | Endpoint of the LaTeX compiler service | `http://localhost:5050` |
-| `GROQ_API_KEY` | Groq AI API key for fast inference | `gsk_...` |
+| Key                         | Description                                            | Example                                       |
+| :-------------------------- | :----------------------------------------------------- | :-------------------------------------------- |
+| `PORT`                      | Port for the backend API                               | `4000`                                        |
+| `NODE_ENV`                  | Application environment (`development` / `production`) | `development`                                 |
+| `API_PREFIX`                | Base prefix for all endpoints                          | `/api/v1`                                     |
+| `CORS_ORIGIN`               | Allowed CORS origins (comma-separated)                 | `http://localhost:5173,http://localhost:3000` |
+| `LOG_LEVEL`                 | Logging level (`debug`, `info`, `warn`, `error`)       | `info`                                        |
+| `SUPABASE_URL`              | Supabase project URL                                   | `https://your-project.supabase.co`            |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role secret                           | `your-service-role-key`                       |
+| `SUPABASE_JWT_SECRET`       | Supabase JWT secret for local token validation         | `your-jwt-secret`                             |
+| `COMPILER_SERVICE_URL`      | Endpoint of the LaTeX compiler service                 | `http://localhost:5050`                       |
+| `GROQ_API_KEY`              | Groq AI API key for fast inference                     | `gsk_...`                                     |
 
 ---
 
 ## 🏃 Getting Started
 
 ### 1. Install Dependencies
+
 ```bash
 npm install
 ```
 
 ### 2. Local Development Server
+
 Starts the Express API with hot-reloading via `tsx`:
+
 ```bash
 npm run dev
 ```
 
 ### 3. Docker Compose (API + Compiler)
+
 Run both the API and the isolated LaTeX compiler container locally:
+
 ```bash
 docker compose up --build
 ```
@@ -138,4 +143,3 @@ npm run build
 # Start production server
 npm start
 ```
-

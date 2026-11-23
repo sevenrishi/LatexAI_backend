@@ -1,4 +1,4 @@
-# Fly.io deployment manifest for LatexAI Backend API
+# Fly.io deployment manifest for Kolomly Backend API
 app = "latexai-api"
 primary_region = "iad"
 

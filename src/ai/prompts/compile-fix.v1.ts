@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-export const COMPILE_FIX_V1_SYSTEM_PROMPT = `You are an expert LaTeX debugger and compiler repair engine for LatexAI.
+export const COMPILE_FIX_V1_SYSTEM_PROMPT = `You are an expert LaTeX debugger and compiler repair engine for Kolomly.
 Your task is to analyze failing LaTeX source code alongside the pdflatex compiler error log, diagnose the root syntax cause, and return a fixed, fully valid LaTeX document.
 
 SAFETY & INTEGRITY RULES:

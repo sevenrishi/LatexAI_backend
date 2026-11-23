@@ -4,7 +4,7 @@ import { runJson } from '../runJson.js'
 import { isGroqConfigured } from '../groq.js'
 import { logger } from '../../utils/logger.js'
 
-export const IMPORT_V1_SYSTEM_PROMPT = `You are an expert resume parsing engine for LatexAI.
+export const IMPORT_V1_SYSTEM_PROMPT = `You are an expert resume parsing engine for Kolomly.
 Your task is to parse raw text extracted from a candidate's resume (PDF or DOCX) into a strictly validated JSON structure.
 
 Rules:
@@ -255,15 +255,23 @@ export function heuristicResumeParser(rawText: string): ResumeImportParsedData {
   const emailMatch = rawText.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/)
   const phoneMatch = rawText.match(/(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/)
   const githubMatch = rawText.match(/(?:https?:\/\/)?(?:www\.)?github\.com\/([a-zA-Z0-9_-]+)/i)
-  const linkedinMatch = rawText.match(/(?:https?:\/\/)?(?:www\.)?linkedin\.com\/in\/([a-zA-Z0-9_-]+)/i)
-  const websiteMatch = rawText.match(/(?:https?:\/\/)(?!github\.com|linkedin\.com)[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:\/[^\s]*)?/i)
+  const linkedinMatch = rawText.match(
+    /(?:https?:\/\/)?(?:www\.)?linkedin\.com\/in\/([a-zA-Z0-9_-]+)/i
+  )
+  const websiteMatch = rawText.match(
+    /(?:https?:\/\/)(?!github\.com|linkedin\.com)[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:\/[^\s]*)?/i
+  )
 
   const fullName = lines.length > 0 ? lines[0]!.replace(/[^a-zA-Z\s.'-]/g, '').trim() : ''
   const headline = lines[1] && lines[1].length < 80 && !lines[1].includes('@') ? lines[1] : ''
 
   let location = ''
   const locationMatch = rawText.match(/\b([A-Z][a-zA-Z\s]+,\s*(?:[A-Z]{2}|[A-Z][a-zA-Z]+))\b/)
-  if (locationMatch && locationMatch[1] && !/experience|education|university|college/i.test(locationMatch[1])) {
+  if (
+    locationMatch &&
+    locationMatch[1] &&
+    !/experience|education|university|college/i.test(locationMatch[1])
+  ) {
     location = locationMatch[1].trim()
   }
 
@@ -271,7 +279,8 @@ export function heuristicResumeParser(rawText: string): ResumeImportParsedData {
   const sectionHeaders: Array<{ section: string; index: number }> = []
   const patterns: Record<string, RegExp> = {
     summary: /^(summary|professional summary|about me|profile|overview)$/i,
-    experience: /^(experience|work experience|employment history|professional experience|work history)$/i,
+    experience:
+      /^(experience|work experience|employment history|professional experience|work history)$/i,
     education: /^(education|academic background|academics|qualifications)$/i,
     skills: /^(skills|technical skills|core competencies|technologies|tools & technologies)$/i,
     projects: /^(projects|personal projects|key projects|technical projects)$/i,
@@ -292,21 +301,64 @@ export function heuristicResumeParser(rawText: string): ResumeImportParsedData {
     const headerIdx = sectionHeaders.findIndex((h) => h.section === secName)
     if (headerIdx === -1) return []
     const start = sectionHeaders[headerIdx]!.index + 1
-    const end = headerIdx < sectionHeaders.length - 1 ? sectionHeaders[headerIdx + 1]!.index : lines.length
+    const end =
+      headerIdx < sectionHeaders.length - 1 ? sectionHeaders[headerIdx + 1]!.index : lines.length
     return lines.slice(start, end)
   }
 
   // 3. Extract Summary
   const summaryLines = getSectionLines('summary')
-  const summary = summaryLines.length > 0 ? summaryLines.join(' ') : (lines.length > 2 && !lines[2]!.includes('@') ? lines.slice(1, 4).join(' ') : '')
+  const summary =
+    summaryLines.length > 0
+      ? summaryLines.join(' ')
+      : lines.length > 2 && !lines[2]!.includes('@')
+        ? lines.slice(1, 4).join(' ')
+        : ''
 
   // 4. Extract Skills
   const commonSkills = [
-    'JavaScript', 'TypeScript', 'Python', 'Java', 'Go', 'Rust', 'C++', 'C#', 'Ruby', 'PHP', 'Swift', 'Kotlin',
-    'React', 'Next.js', 'Vue.js', 'Angular', 'Node.js', 'Express', 'NestJS', 'Django', 'FastAPI', 'Spring Boot',
-    'PostgreSQL', 'MySQL', 'MongoDB', 'Redis', 'Elasticsearch', 'DynamoDB',
-    'Docker', 'Kubernetes', 'AWS', 'GCP', 'Azure', 'CI/CD', 'Terraform', 'Linux',
-    'Git', 'GraphQL', 'REST APIs', 'Microservices', 'Tailwind CSS', 'LaTeX'
+    'JavaScript',
+    'TypeScript',
+    'Python',
+    'Java',
+    'Go',
+    'Rust',
+    'C++',
+    'C#',
+    'Ruby',
+    'PHP',
+    'Swift',
+    'Kotlin',
+    'React',
+    'Next.js',
+    'Vue.js',
+    'Angular',
+    'Node.js',
+    'Express',
+    'NestJS',
+    'Django',
+    'FastAPI',
+    'Spring Boot',
+    'PostgreSQL',
+    'MySQL',
+    'MongoDB',
+    'Redis',
+    'Elasticsearch',
+    'DynamoDB',
+    'Docker',
+    'Kubernetes',
+    'AWS',
+    'GCP',
+    'Azure',
+    'CI/CD',
+    'Terraform',
+    'Linux',
+    'Git',
+    'GraphQL',
+    'REST APIs',
+    'Microservices',
+    'Tailwind CSS',
+    'LaTeX',
   ]
   const skillLines = getSectionLines('skills')
   const skillSearchText = skillLines.length > 0 ? skillLines.join(' ') : rawText
@@ -314,11 +366,49 @@ export function heuristicResumeParser(rawText: string): ResumeImportParsedData {
     .filter((sk) => new RegExp(`\\b${sk.replace(/\+/g, '\\+')}\\b`, 'i').test(skillSearchText))
     .map((name) => {
       let category = 'Other'
-      if (['JavaScript', 'TypeScript', 'Python', 'Java', 'Go', 'Rust', 'C++', 'C#', 'Ruby', 'PHP', 'Swift', 'Kotlin'].includes(name)) category = 'Languages'
-      else if (['React', 'Next.js', 'Vue.js', 'Angular', 'Tailwind CSS'].includes(name)) category = 'Frontend'
-      else if (['Node.js', 'Express', 'NestJS', 'Django', 'FastAPI', 'Spring Boot', 'GraphQL', 'REST APIs', 'Microservices'].includes(name)) category = 'Backend'
-      else if (['PostgreSQL', 'MySQL', 'MongoDB', 'Redis', 'Elasticsearch', 'DynamoDB'].includes(name)) category = 'Databases'
-      else if (['Docker', 'Kubernetes', 'AWS', 'GCP', 'Azure', 'CI/CD', 'Terraform', 'Linux'].includes(name)) category = 'DevOps'
+      if (
+        [
+          'JavaScript',
+          'TypeScript',
+          'Python',
+          'Java',
+          'Go',
+          'Rust',
+          'C++',
+          'C#',
+          'Ruby',
+          'PHP',
+          'Swift',
+          'Kotlin',
+        ].includes(name)
+      )
+        category = 'Languages'
+      else if (['React', 'Next.js', 'Vue.js', 'Angular', 'Tailwind CSS'].includes(name))
+        category = 'Frontend'
+      else if (
+        [
+          'Node.js',
+          'Express',
+          'NestJS',
+          'Django',
+          'FastAPI',
+          'Spring Boot',
+          'GraphQL',
+          'REST APIs',
+          'Microservices',
+        ].includes(name)
+      )
+        category = 'Backend'
+      else if (
+        ['PostgreSQL', 'MySQL', 'MongoDB', 'Redis', 'Elasticsearch', 'DynamoDB'].includes(name)
+      )
+        category = 'Databases'
+      else if (
+        ['Docker', 'Kubernetes', 'AWS', 'GCP', 'Azure', 'CI/CD', 'Terraform', 'Linux'].includes(
+          name
+        )
+      )
+        category = 'DevOps'
       else if (['Git', 'LaTeX'].includes(name)) category = 'Tools'
       return { id: uuidv4(), name, category }
     })
@@ -337,8 +427,9 @@ export function heuristicResumeParser(rawText: string): ResumeImportParsedData {
   }> = []
 
   if (expLines.length > 0) {
-    let currentRole: typeof experience[0] | null = null
-    const dateRegex = /(?:(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+)?(\d{4})\s*[-–—to]+\s*(?:(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+)?(\d{4}|Present|Current)/i
+    let currentRole: (typeof experience)[0] | null = null
+    const dateRegex =
+      /(?:(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+)?(\d{4})\s*[-–—to]+\s*(?:(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+)?(\d{4}|Present|Current)/i
 
     for (const line of expLines) {
       const dateMatch = line.match(dateRegex)
@@ -348,8 +439,12 @@ export function heuristicResumeParser(rawText: string): ResumeImportParsedData {
         if (currentRole) experience.push(currentRole)
         const isCurrent = /present|current/i.test(dateMatch[0])
         const startYear = dateMatch[2] || '2022'
-        const endYear = isCurrent ? null : (dateMatch[4] || '2023')
-        const titleCompanyPart = line.replace(dateMatch[0], '').trim().replace(/^[-–—|,]\s*/, '').replace(/[-–—|,]\s*$/, '')
+        const endYear = isCurrent ? null : dateMatch[4] || '2023'
+        const titleCompanyPart = line
+          .replace(dateMatch[0], '')
+          .trim()
+          .replace(/^[-–—|,]\s*/, '')
+          .replace(/[-–—|,]\s*$/, '')
         const parts = titleCompanyPart.split(/\s*[-–—|@,]\s*/)
 
         currentRole = {
@@ -388,13 +483,18 @@ export function heuristicResumeParser(rawText: string): ResumeImportParsedData {
   }> = []
 
   if (eduLines.length > 0) {
-    let currentEdu: typeof education[0] | null = null
-    const degreeRegex = /(Bachelor|Master|B\.?S\.?|B\.?A\.?|M\.?S\.?|B\.?Tech|M\.?Tech|Ph\.?D|Associate|Diploma)/i
+    let currentEdu: (typeof education)[0] | null = null
+    const degreeRegex =
+      /(Bachelor|Master|B\.?S\.?|B\.?A\.?|M\.?S\.?|B\.?Tech|M\.?Tech|Ph\.?D|Associate|Diploma)/i
     const dateRegex = /(\d{4})\s*[-–—to]+\s*(\d{4}|Present)/i
 
     for (const line of eduLines) {
       const dateMatch = line.match(dateRegex)
-      if (degreeRegex.test(line) || dateMatch || /university|college|institute|school/i.test(line)) {
+      if (
+        degreeRegex.test(line) ||
+        dateMatch ||
+        /university|college|institute|school/i.test(line)
+      ) {
         if (currentEdu) education.push(currentEdu)
         const isCurrent = dateMatch ? /present/i.test(dateMatch[2] || '') : false
         const startYear = dateMatch ? dateMatch[1] : '2018'
@@ -402,9 +502,15 @@ export function heuristicResumeParser(rawText: string): ResumeImportParsedData {
 
         currentEdu = {
           id: uuidv4(),
-          institution: /university|college|institute|school/i.test(line) ? line.replace(dateRegex, '').trim() : 'University',
-          degree: degreeRegex.test(line) ? line.replace(dateRegex, '').trim() : 'Bachelor of Science',
-          fieldOfStudy: /computer science|engineering|information technology/i.test(line) ? 'Computer Science' : '',
+          institution: /university|college|institute|school/i.test(line)
+            ? line.replace(dateRegex, '').trim()
+            : 'University',
+          degree: degreeRegex.test(line)
+            ? line.replace(dateRegex, '').trim()
+            : 'Bachelor of Science',
+          fieldOfStudy: /computer science|engineering|information technology/i.test(line)
+            ? 'Computer Science'
+            : '',
           location: '',
           startDate: `${startYear}-09`,
           endDate: `${endYear}-05`,
@@ -430,7 +536,7 @@ export function heuristicResumeParser(rawText: string): ResumeImportParsedData {
   }> = []
 
   if (projLines.length > 0) {
-    let currentProj: typeof projects[0] | null = null
+    let currentProj: (typeof projects)[0] | null = null
     for (const line of projLines) {
       if (line.length < 50 && !/^[-*•·–]/.test(line)) {
         if (currentProj) projects.push(currentProj)
@@ -445,7 +551,9 @@ export function heuristicResumeParser(rawText: string): ResumeImportParsedData {
         }
       } else if (currentProj) {
         const text = line.replace(/^[-*•·–]\s*/, '').trim()
-        currentProj.description = currentProj.description ? `${currentProj.description} ${text}` : text
+        currentProj.description = currentProj.description
+          ? `${currentProj.description} ${text}`
+          : text
       }
     }
     if (currentProj) projects.push(currentProj)
@@ -490,8 +598,16 @@ export function heuristicResumeParser(rawText: string): ResumeImportParsedData {
       phone: phoneMatch ? phoneMatch[0] : '',
       location: location || '',
       website: websiteMatch ? websiteMatch[0] : '',
-      linkedin: linkedinMatch ? (linkedinMatch[0].startsWith('http') ? linkedinMatch[0] : `https://${linkedinMatch[0]}`) : '',
-      github: githubMatch ? (githubMatch[0].startsWith('http') ? githubMatch[0] : `https://${githubMatch[0]}`) : '',
+      linkedin: linkedinMatch
+        ? linkedinMatch[0].startsWith('http')
+          ? linkedinMatch[0]
+          : `https://${linkedinMatch[0]}`
+        : '',
+      github: githubMatch
+        ? githubMatch[0].startsWith('http')
+          ? githubMatch[0]
+          : `https://${githubMatch[0]}`
+        : '',
     },
     summary,
     experience,

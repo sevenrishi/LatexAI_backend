@@ -117,7 +117,7 @@ app.post('/compile', async (req: Request, res: Response) => {
 // Start server if executed directly
 if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
   const server = app.listen(PORT, () => {
-    console.log(`[compiler] LatexAI Compiler Service running on port ${PORT}`)
+    console.log(`[compiler] Kolomly Compiler Service running on port ${PORT}`)
   })
 
   const shutdown = () => {

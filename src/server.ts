@@ -45,7 +45,7 @@ server.listen(env.PORT, () => {
       prefix: env.API_PREFIX,
       logLevel: env.LOG_LEVEL,
     },
-    `LatexAI Backend API listening on port ${env.PORT}`
+    `Kolomly Backend API listening on port ${env.PORT}`
   )
 
   // Crash recovery tasks (BE-4.21)

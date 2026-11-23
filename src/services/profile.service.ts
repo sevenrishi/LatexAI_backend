@@ -20,7 +20,11 @@ export function ensureUuid(id: unknown): string {
   return uuidv4()
 }
 
-export function sanitizeExperiencePayload(userId: string, item: Record<string, unknown>, sortOrder = 0) {
+export function sanitizeExperiencePayload(
+  userId: string,
+  item: Record<string, unknown>,
+  sortOrder = 0
+) {
   const rawBullets = Array.isArray(item.bullets) ? item.bullets : []
   const bullets = rawBullets.map((b: unknown) => {
     if (typeof b === 'string') return { id: uuidv4(), text: b }
@@ -41,43 +45,80 @@ export function sanitizeExperiencePayload(userId: string, item: Record<string, u
     end_date: item.endDate || item.end_date ? String(item.endDate || item.end_date) : null,
     current: Boolean(item.current),
     bullets,
-    sort_order: typeof item.sortOrder === 'number' ? item.sortOrder : (typeof item.sort_order === 'number' ? item.sort_order : sortOrder),
+    sort_order:
+      typeof item.sortOrder === 'number'
+        ? item.sortOrder
+        : typeof item.sort_order === 'number'
+          ? item.sort_order
+          : sortOrder,
   }
 }
 
-export function sanitizeEducationPayload(userId: string, item: Record<string, unknown>, sortOrder = 0) {
+export function sanitizeEducationPayload(
+  userId: string,
+  item: Record<string, unknown>,
+  sortOrder = 0
+) {
   return {
     id: ensureUuid(item.id),
     user_id: userId,
     institution: String(item.institution || ''),
     degree: String(item.degree || ''),
-    field_of_study: item.fieldOfStudy || item.field_of_study ? String(item.fieldOfStudy || item.field_of_study) : '',
+    field_of_study:
+      item.fieldOfStudy || item.field_of_study
+        ? String(item.fieldOfStudy || item.field_of_study)
+        : '',
     location: item.location ? String(item.location) : '',
     start_date: String(item.startDate || item.start_date || ''),
     end_date: item.endDate || item.end_date ? String(item.endDate || item.end_date) : '',
     current: Boolean(item.current),
     gpa: item.gpa ? String(item.gpa) : '',
     honors: item.honors ? String(item.honors) : '',
-    sort_order: typeof item.sortOrder === 'number' ? item.sortOrder : (typeof item.sort_order === 'number' ? item.sort_order : sortOrder),
+    sort_order:
+      typeof item.sortOrder === 'number'
+        ? item.sortOrder
+        : typeof item.sort_order === 'number'
+          ? item.sort_order
+          : sortOrder,
   }
 }
 
-export function sanitizeCertificationPayload(userId: string, item: Record<string, unknown>, sortOrder = 0) {
+export function sanitizeCertificationPayload(
+  userId: string,
+  item: Record<string, unknown>,
+  sortOrder = 0
+) {
   return {
     id: ensureUuid(item.id),
     user_id: userId,
     name: String(item.name || ''),
     issuer: String(item.issuer || ''),
     issue_date: String(item.issueDate || item.issue_date || ''),
-    expiry_date: item.expiryDate || item.expiry_date ? String(item.expiryDate || item.expiry_date) : null,
+    expiry_date:
+      item.expiryDate || item.expiry_date ? String(item.expiryDate || item.expiry_date) : null,
     does_not_expire: Boolean(item.doesNotExpire ?? item.does_not_expire),
-    credential_id: item.credentialId || item.credential_id ? String(item.credentialId || item.credential_id) : '',
-    credential_url: item.credentialUrl || item.credential_url ? String(item.credentialUrl || item.credential_url) : '',
-    sort_order: typeof item.sortOrder === 'number' ? item.sortOrder : (typeof item.sort_order === 'number' ? item.sort_order : sortOrder),
+    credential_id:
+      item.credentialId || item.credential_id
+        ? String(item.credentialId || item.credential_id)
+        : '',
+    credential_url:
+      item.credentialUrl || item.credential_url
+        ? String(item.credentialUrl || item.credential_url)
+        : '',
+    sort_order:
+      typeof item.sortOrder === 'number'
+        ? item.sortOrder
+        : typeof item.sort_order === 'number'
+          ? item.sort_order
+          : sortOrder,
   }
 }
 
-export function sanitizeProjectPayload(userId: string, item: Record<string, unknown>, sortOrder = 0) {
+export function sanitizeProjectPayload(
+  userId: string,
+  item: Record<string, unknown>,
+  sortOrder = 0
+) {
   const rawTech = item.techStack || item.tech_stack
   const tech_stack = Array.isArray(rawTech) ? rawTech : []
 
@@ -90,7 +131,12 @@ export function sanitizeProjectPayload(userId: string, item: Record<string, unkn
     tech_stack,
     live_url: item.liveUrl || item.live_url ? String(item.liveUrl || item.live_url) : '',
     repo_url: item.repoUrl || item.repo_url ? String(item.repoUrl || item.repo_url) : '',
-    sort_order: typeof item.sortOrder === 'number' ? item.sortOrder : (typeof item.sort_order === 'number' ? item.sort_order : sortOrder),
+    sort_order:
+      typeof item.sortOrder === 'number'
+        ? item.sortOrder
+        : typeof item.sort_order === 'number'
+          ? item.sort_order
+          : sortOrder,
   }
 }
 
@@ -239,11 +285,13 @@ function getOrCreateMockStore(userId: string, email = ''): MockProfileData {
       root: {
         id: userId,
         email: email || `${userId}@example.com`,
-        full_name: isExplicitDemo ? 'Alex Morgan' : (email ? email.split('@')[0] : ''),
+        full_name: isExplicitDemo ? 'Alex Morgan' : email ? email.split('@')[0] : '',
         headline: isExplicitDemo ? 'Senior Full Stack Engineer' : '',
         phone: isExplicitDemo ? '+1 (555) 019-2834' : '',
         location: isExplicitDemo ? 'San Francisco, CA' : '',
-        summary: isExplicitDemo ? 'Experienced software engineer specializing in web and distributed systems.' : '',
+        summary: isExplicitDemo
+          ? 'Experienced software engineer specializing in web and distributed systems.'
+          : '',
         website: isExplicitDemo ? 'https://alexmorgan.dev' : '',
         github: isExplicitDemo ? 'https://github.com/alexmorgan' : '',
         linkedin: isExplicitDemo ? 'https://linkedin.com/in/alexmorgan' : '',
@@ -251,57 +299,67 @@ function getOrCreateMockStore(userId: string, email = ''): MockProfileData {
         onboarding_completed: isExplicitDemo,
         updated_at: new Date().toISOString(),
       },
-      experience: isExplicitDemo ? [
-        {
-          id: uuidv4(),
-          company: 'CloudScale Inc',
-          title: 'Staff Architect',
-          location: 'San Francisco, CA',
-          startDate: '2023-01',
-          endDate: null,
-          current: true,
-          bullets: [
+      experience: isExplicitDemo
+        ? [
             {
               id: uuidv4(),
-              text: 'Architected distributed event systems handling 50M+ requests/day.',
+              company: 'CloudScale Inc',
+              title: 'Staff Architect',
+              location: 'San Francisco, CA',
+              startDate: '2023-01',
+              endDate: null,
+              current: true,
+              bullets: [
+                {
+                  id: uuidv4(),
+                  text: 'Architected distributed event systems handling 50M+ requests/day.',
+                },
+              ],
             },
-          ],
-        },
-      ] : [],
-      education: isExplicitDemo ? [
-        {
-          id: uuidv4(),
-          institution: 'UC Berkeley',
-          degree: 'B.S. in Computer Science',
-          fieldOfStudy: 'Computer Science',
-          startDate: '2018-08',
-          endDate: '2022-05',
-        },
-      ] : [],
-      skills: isExplicitDemo ? [
-        { id: uuidv4(), name: 'TypeScript', category: 'Languages' },
-        { id: uuidv4(), name: 'React', category: 'Frontend' },
-        { id: uuidv4(), name: 'Node.js', category: 'Backend' },
-        { id: uuidv4(), name: 'PostgreSQL', category: 'Databases' },
-      ] : [],
-      certifications: isExplicitDemo ? [
-        {
-          id: uuidv4(),
-          name: 'Certified Kubernetes Administrator',
-          issuer: 'CNCF',
-          issueDate: '2023-05',
-          doesNotExpire: false,
-        },
-      ] : [],
-      projects: isExplicitDemo ? [
-        {
-          id: uuidv4(),
-          title: 'LatexAI Engine',
-          role: 'Creator',
-          description: 'Automated ATS LaTeX typesetting platform.',
-          techStack: ['TypeScript', 'Express', 'React'],
-        },
-      ] : [],
+          ]
+        : [],
+      education: isExplicitDemo
+        ? [
+            {
+              id: uuidv4(),
+              institution: 'UC Berkeley',
+              degree: 'B.S. in Computer Science',
+              fieldOfStudy: 'Computer Science',
+              startDate: '2018-08',
+              endDate: '2022-05',
+            },
+          ]
+        : [],
+      skills: isExplicitDemo
+        ? [
+            { id: uuidv4(), name: 'TypeScript', category: 'Languages' },
+            { id: uuidv4(), name: 'React', category: 'Frontend' },
+            { id: uuidv4(), name: 'Node.js', category: 'Backend' },
+            { id: uuidv4(), name: 'PostgreSQL', category: 'Databases' },
+          ]
+        : [],
+      certifications: isExplicitDemo
+        ? [
+            {
+              id: uuidv4(),
+              name: 'Certified Kubernetes Administrator',
+              issuer: 'CNCF',
+              issueDate: '2023-05',
+              doesNotExpire: false,
+            },
+          ]
+        : [],
+      projects: isExplicitDemo
+        ? [
+            {
+              id: uuidv4(),
+              title: 'Kolomly Engine',
+              role: 'Creator',
+              description: 'Automated ATS LaTeX typesetting platform.',
+              techStack: ['TypeScript', 'Express', 'React'],
+            },
+          ]
+        : [],
     }
     mockStores.set(userId, store)
   }
@@ -397,7 +455,7 @@ export class ProfileService {
       const seenExp = new Set<string>()
       const duplicateExpIds: string[] = []
       const experience: ExperienceItem[] = []
-      for (const e of (expRes.data || [])) {
+      for (const e of expRes.data || []) {
         const sig = `${(e.company || '').trim().toLowerCase()}::${(e.title || '').trim().toLowerCase()}`
         if (seenExp.has(sig)) {
           duplicateExpIds.push(e.id)
@@ -420,7 +478,7 @@ export class ProfileService {
       const seenEdu = new Set<string>()
       const duplicateEduIds: string[] = []
       const education: EducationItem[] = []
-      for (const e of (eduRes.data || [])) {
+      for (const e of eduRes.data || []) {
         const sig = `${(e.institution || '').trim().toLowerCase()}::${(e.degree || '').trim().toLowerCase()}`
         if (seenEdu.has(sig)) {
           duplicateEduIds.push(e.id)
@@ -445,7 +503,7 @@ export class ProfileService {
       const seenSkills = new Set<string>()
       const duplicateSkillIds: string[] = []
       const skills: SkillItem[] = []
-      for (const s of (skillRes.data || [])) {
+      for (const s of skillRes.data || []) {
         const sig = (s.name || '').trim().toLowerCase()
         if (seenSkills.has(sig)) {
           duplicateSkillIds.push(s.id)
@@ -463,7 +521,7 @@ export class ProfileService {
       const seenCerts = new Set<string>()
       const duplicateCertIds: string[] = []
       const certifications: CertificationItem[] = []
-      for (const c of (certRes.data || [])) {
+      for (const c of certRes.data || []) {
         const sig = `${(c.name || '').trim().toLowerCase()}::${(c.issuer || '').trim().toLowerCase()}`
         if (seenCerts.has(sig)) {
           duplicateCertIds.push(c.id)
@@ -486,7 +544,7 @@ export class ProfileService {
       const seenProj = new Set<string>()
       const duplicateProjIds: string[] = []
       const projects: ProjectItem[] = []
-      for (const p of (projRes.data || [])) {
+      for (const p of projRes.data || []) {
         const sig = (p.title || '').trim().toLowerCase()
         if (seenProj.has(sig)) {
           duplicateProjIds.push(p.id)
@@ -507,11 +565,16 @@ export class ProfileService {
 
       // Asynchronously purge duplicate rows from Supabase
       if (!isMockMode()) {
-        if (duplicateExpIds.length > 0) void supabaseAdmin.from('profile_experience').delete().in('id', duplicateExpIds)
-        if (duplicateEduIds.length > 0) void supabaseAdmin.from('profile_education').delete().in('id', duplicateEduIds)
-        if (duplicateCertIds.length > 0) void supabaseAdmin.from('profile_certifications').delete().in('id', duplicateCertIds)
-        if (duplicateProjIds.length > 0) void supabaseAdmin.from('profile_projects').delete().in('id', duplicateProjIds)
-        if (duplicateSkillIds.length > 0) void supabaseAdmin.from('profile_skills').delete().in('id', duplicateSkillIds)
+        if (duplicateExpIds.length > 0)
+          void supabaseAdmin.from('profile_experience').delete().in('id', duplicateExpIds)
+        if (duplicateEduIds.length > 0)
+          void supabaseAdmin.from('profile_education').delete().in('id', duplicateEduIds)
+        if (duplicateCertIds.length > 0)
+          void supabaseAdmin.from('profile_certifications').delete().in('id', duplicateCertIds)
+        if (duplicateProjIds.length > 0)
+          void supabaseAdmin.from('profile_projects').delete().in('id', duplicateProjIds)
+        if (duplicateSkillIds.length > 0)
+          void supabaseAdmin.from('profile_skills').delete().in('id', duplicateSkillIds)
       }
 
       const completeness = calculateProfileCompleteness({
@@ -528,10 +591,23 @@ export class ProfileService {
       })
 
       const rawLinks = Array.isArray(profile?.links) ? profile.links : []
-      const websiteLink = rawLinks.find((l: any) => l.id === 'website' || l.label?.toLowerCase() === 'website' || l.label?.toLowerCase() === 'portfolio')
-      const githubLink = rawLinks.find((l: any) => l.id === 'github' || l.label?.toLowerCase() === 'github')
-      const linkedinLink = rawLinks.find((l: any) => l.id === 'linkedin' || l.label?.toLowerCase() === 'linkedin')
-      const customLinks = rawLinks.filter((l: any) => !['website', 'github', 'linkedin'].includes(l.id) && !['website', 'github', 'linkedin', 'portfolio'].includes(l.label?.toLowerCase()))
+      const websiteLink = rawLinks.find(
+        (l: any) =>
+          l.id === 'website' ||
+          l.label?.toLowerCase() === 'website' ||
+          l.label?.toLowerCase() === 'portfolio'
+      )
+      const githubLink = rawLinks.find(
+        (l: any) => l.id === 'github' || l.label?.toLowerCase() === 'github'
+      )
+      const linkedinLink = rawLinks.find(
+        (l: any) => l.id === 'linkedin' || l.label?.toLowerCase() === 'linkedin'
+      )
+      const customLinks = rawLinks.filter(
+        (l: any) =>
+          !['website', 'github', 'linkedin'].includes(l.id) &&
+          !['website', 'github', 'linkedin', 'portfolio'].includes(l.label?.toLowerCase())
+      )
 
       return {
         id: userId,
@@ -555,7 +631,10 @@ export class ProfileService {
         updatedAt: profile?.updated_at,
       }
     } catch (err) {
-      logger.warn({ err, userId }, 'Error fetching full profile from DB; falling back to local persistent store')
+      logger.warn(
+        { err, userId },
+        'Error fetching full profile from DB; falling back to local persistent store'
+      )
       const store = getOrCreateMockStore(userId, email)
       const completeness = calculateProfileCompleteness({
         fullName: store.root.full_name as string,
@@ -614,10 +693,12 @@ export class ProfileService {
       if (updates.github !== undefined) store.root.github = updates.github
       if (updates.linkedin !== undefined) store.root.linkedin = updates.linkedin
       if (updates.customLinks !== undefined) store.root.customLinks = updates.customLinks
-      if (Array.isArray(updates.experience)) store.experience = updates.experience as ExperienceItem[]
+      if (Array.isArray(updates.experience))
+        store.experience = updates.experience as ExperienceItem[]
       if (Array.isArray(updates.education)) store.education = updates.education as EducationItem[]
       if (Array.isArray(updates.skills)) store.skills = updates.skills as SkillItem[]
-      if (Array.isArray(updates.certifications)) store.certifications = updates.certifications as CertificationItem[]
+      if (Array.isArray(updates.certifications))
+        store.certifications = updates.certifications as CertificationItem[]
       if (Array.isArray(updates.projects)) store.projects = updates.projects as ProjectItem[]
       store.root.updated_at = new Date().toISOString()
       saveStoresToDisk(mockStores)
@@ -641,16 +722,29 @@ export class ProfileService {
     if (hasLinkUpdates) {
       let existingLinks: Array<{ id: string; label: string; url: string }> = []
       try {
-        const { data: cur } = await supabaseAdmin.from('profiles').select('links').eq('id', userId).maybeSingle()
+        const { data: cur } = await supabaseAdmin
+          .from('profiles')
+          .select('links')
+          .eq('id', userId)
+          .maybeSingle()
         if (Array.isArray(cur?.links)) existingLinks = cur.links
       } catch {
         // continue
       }
 
       const newLinks: Array<{ id: string; label: string; url: string }> = []
-      const targetWebsite = updates.website !== undefined ? (updates.website as string) : existingLinks.find((l) => l.id === 'website')?.url
-      const targetGithub = updates.github !== undefined ? (updates.github as string) : existingLinks.find((l) => l.id === 'github')?.url
-      const targetLinkedin = updates.linkedin !== undefined ? (updates.linkedin as string) : existingLinks.find((l) => l.id === 'linkedin')?.url
+      const targetWebsite =
+        updates.website !== undefined
+          ? (updates.website as string)
+          : existingLinks.find((l) => l.id === 'website')?.url
+      const targetGithub =
+        updates.github !== undefined
+          ? (updates.github as string)
+          : existingLinks.find((l) => l.id === 'github')?.url
+      const targetLinkedin =
+        updates.linkedin !== undefined
+          ? (updates.linkedin as string)
+          : existingLinks.find((l) => l.id === 'linkedin')?.url
 
       if (targetWebsite) newLinks.push({ id: 'website', label: 'Website', url: targetWebsite })
       if (targetLinkedin) newLinks.push({ id: 'linkedin', label: 'LinkedIn', url: targetLinkedin })
@@ -670,7 +764,11 @@ export class ProfileService {
     payload.updated_at = new Date().toISOString()
 
     try {
-      const { data: existingProfile } = await supabaseAdmin.from('profiles').select('id, email').eq('id', userId).maybeSingle()
+      const { data: existingProfile } = await supabaseAdmin
+        .from('profiles')
+        .select('id, email')
+        .eq('id', userId)
+        .maybeSingle()
       if (!existingProfile) {
         await supabaseAdmin.from('profiles').insert({
           id: userId,
@@ -678,7 +776,10 @@ export class ProfileService {
           ...payload,
         })
       } else if (Object.keys(payload).length > 0) {
-        const { error: updateErr } = await supabaseAdmin.from('profiles').update(payload).eq('id', userId)
+        const { error: updateErr } = await supabaseAdmin
+          .from('profiles')
+          .update(payload)
+          .eq('id', userId)
         if (updateErr) throw updateErr
       }
 
@@ -705,7 +806,10 @@ export class ProfileService {
       if (Array.isArray(updates.skills)) {
         await supabaseAdmin.from('profile_skills').delete().eq('user_id', userId)
         if (updates.skills.length > 0) {
-          await this.bulkAddSkills(userId, updates.skills as Array<string | { name: string; category?: string }>)
+          await this.bulkAddSkills(
+            userId,
+            updates.skills as Array<string | { name: string; category?: string }>
+          )
         }
       }
 
@@ -731,7 +835,10 @@ export class ProfileService {
 
       return this.getFullProfile(userId)
     } catch (err) {
-      logger.warn({ err, userId }, 'Error updating profile in DB; falling back to local persistent store')
+      logger.warn(
+        { err, userId },
+        'Error updating profile in DB; falling back to local persistent store'
+      )
       const store = getOrCreateMockStore(userId)
       if (updates.fullName !== undefined) store.root.full_name = updates.fullName
       if (updates.headline !== undefined) store.root.headline = updates.headline
@@ -743,10 +850,12 @@ export class ProfileService {
       if (updates.github !== undefined) store.root.github = updates.github
       if (updates.linkedin !== undefined) store.root.linkedin = updates.linkedin
       if (updates.customLinks !== undefined) store.root.customLinks = updates.customLinks
-      if (Array.isArray(updates.experience)) store.experience = updates.experience as ExperienceItem[]
+      if (Array.isArray(updates.experience))
+        store.experience = updates.experience as ExperienceItem[]
       if (Array.isArray(updates.education)) store.education = updates.education as EducationItem[]
       if (Array.isArray(updates.skills)) store.skills = updates.skills as SkillItem[]
-      if (Array.isArray(updates.certifications)) store.certifications = updates.certifications as CertificationItem[]
+      if (Array.isArray(updates.certifications))
+        store.certifications = updates.certifications as CertificationItem[]
       if (Array.isArray(updates.projects)) store.projects = updates.projects as ProjectItem[]
       store.root.updated_at = new Date().toISOString()
       saveStoresToDisk(mockStores)
@@ -826,7 +935,10 @@ export class ProfileService {
     const tableName = `profile_${section}`
     const { data, error } = await supabaseAdmin.from(tableName).insert(dbPayload).select().single()
     if (error) {
-      logger.warn({ error, section, userId }, 'Database insert error for section item; falling back to local persistent store')
+      logger.warn(
+        { error, section, userId },
+        'Database insert error for section item; falling back to local persistent store'
+      )
       const store = getOrCreateMockStore(userId)
       let newItem: Record<string, unknown> = { ...itemData, id: itemId }
       if (section === 'experience') {
@@ -990,7 +1102,10 @@ export class ProfileService {
       const { data } = await supabaseAdmin.from('profile_skills').select('*').eq('user_id', userId)
       return (data || []).map((s) => ({ id: s.id, name: s.name, category: s.category }))
     } catch (err) {
-      logger.warn({ err, userId }, 'Database bulkAddSkills error; falling back to local persistent store')
+      logger.warn(
+        { err, userId },
+        'Database bulkAddSkills error; falling back to local persistent store'
+      )
       const store = getOrCreateMockStore(userId)
       const existingNames = new Set(store.skills.map((s) => s.name.toLowerCase().trim()))
       for (const raw of rawSkills) {
@@ -1223,11 +1338,24 @@ export class ProfileService {
       if (strategy === 'merge') {
         if (isMockMode()) {
           const store = getOrCreateMockStore(userId)
-          existingExpKeys = new Set((store.experience || []).map((e) => `${(e.company || '').trim().toLowerCase()}::${(e.title || '').trim().toLowerCase()}`))
+          existingExpKeys = new Set(
+            (store.experience || []).map(
+              (e) =>
+                `${(e.company || '').trim().toLowerCase()}::${(e.title || '').trim().toLowerCase()}`
+            )
+          )
         } else {
           try {
-            const { data } = await supabaseAdmin.from('profile_experience').select('company, title').eq('user_id', userId)
-            existingExpKeys = new Set((data || []).map((e: any) => `${(e.company || '').trim().toLowerCase()}::${(e.title || '').trim().toLowerCase()}`))
+            const { data } = await supabaseAdmin
+              .from('profile_experience')
+              .select('company, title')
+              .eq('user_id', userId)
+            existingExpKeys = new Set(
+              (data || []).map(
+                (e: any) =>
+                  `${(e.company || '').trim().toLowerCase()}::${(e.title || '').trim().toLowerCase()}`
+              )
+            )
           } catch {
             // continue
           }
@@ -1235,7 +1363,11 @@ export class ProfileService {
       }
 
       for (const exp of payload.experience) {
-        const key = `${String((exp as any).company || '').trim().toLowerCase()}::${String((exp as any).title || '').trim().toLowerCase()}`
+        const key = `${String((exp as any).company || '')
+          .trim()
+          .toLowerCase()}::${String((exp as any).title || '')
+          .trim()
+          .toLowerCase()}`
         if (strategy === 'merge' && existingExpKeys.has(key)) {
           continue
         }
@@ -1260,11 +1392,24 @@ export class ProfileService {
       if (strategy === 'merge') {
         if (isMockMode()) {
           const store = getOrCreateMockStore(userId)
-          existingEduKeys = new Set((store.education || []).map((e) => `${(e.institution || '').trim().toLowerCase()}::${(e.degree || '').trim().toLowerCase()}`))
+          existingEduKeys = new Set(
+            (store.education || []).map(
+              (e) =>
+                `${(e.institution || '').trim().toLowerCase()}::${(e.degree || '').trim().toLowerCase()}`
+            )
+          )
         } else {
           try {
-            const { data } = await supabaseAdmin.from('profile_education').select('institution, degree').eq('user_id', userId)
-            existingEduKeys = new Set((data || []).map((e: any) => `${(e.institution || '').trim().toLowerCase()}::${(e.degree || '').trim().toLowerCase()}`))
+            const { data } = await supabaseAdmin
+              .from('profile_education')
+              .select('institution, degree')
+              .eq('user_id', userId)
+            existingEduKeys = new Set(
+              (data || []).map(
+                (e: any) =>
+                  `${(e.institution || '').trim().toLowerCase()}::${(e.degree || '').trim().toLowerCase()}`
+              )
+            )
           } catch {
             // continue
           }
@@ -1272,7 +1417,11 @@ export class ProfileService {
       }
 
       for (const edu of payload.education) {
-        const key = `${String((edu as any).institution || '').trim().toLowerCase()}::${String((edu as any).degree || '').trim().toLowerCase()}`
+        const key = `${String((edu as any).institution || '')
+          .trim()
+          .toLowerCase()}::${String((edu as any).degree || '')
+          .trim()
+          .toLowerCase()}`
         if (strategy === 'merge' && existingEduKeys.has(key)) {
           continue
         }
@@ -1311,11 +1460,24 @@ export class ProfileService {
       if (strategy === 'merge') {
         if (isMockMode()) {
           const store = getOrCreateMockStore(userId)
-          existingCertKeys = new Set((store.certifications || []).map((c) => `${(c.name || '').trim().toLowerCase()}::${(c.issuer || '').trim().toLowerCase()}`))
+          existingCertKeys = new Set(
+            (store.certifications || []).map(
+              (c) =>
+                `${(c.name || '').trim().toLowerCase()}::${(c.issuer || '').trim().toLowerCase()}`
+            )
+          )
         } else {
           try {
-            const { data } = await supabaseAdmin.from('profile_certifications').select('name, issuer').eq('user_id', userId)
-            existingCertKeys = new Set((data || []).map((c: any) => `${(c.name || '').trim().toLowerCase()}::${(c.issuer || '').trim().toLowerCase()}`))
+            const { data } = await supabaseAdmin
+              .from('profile_certifications')
+              .select('name, issuer')
+              .eq('user_id', userId)
+            existingCertKeys = new Set(
+              (data || []).map(
+                (c: any) =>
+                  `${(c.name || '').trim().toLowerCase()}::${(c.issuer || '').trim().toLowerCase()}`
+              )
+            )
           } catch {
             // continue
           }
@@ -1323,7 +1485,11 @@ export class ProfileService {
       }
 
       for (const cert of payload.certifications) {
-        const key = `${String((cert as any).name || '').trim().toLowerCase()}::${String((cert as any).issuer || '').trim().toLowerCase()}`
+        const key = `${String((cert as any).name || '')
+          .trim()
+          .toLowerCase()}::${String((cert as any).issuer || '')
+          .trim()
+          .toLowerCase()}`
         if (strategy === 'merge' && existingCertKeys.has(key)) {
           continue
         }
@@ -1348,11 +1514,18 @@ export class ProfileService {
       if (strategy === 'merge') {
         if (isMockMode()) {
           const store = getOrCreateMockStore(userId)
-          existingProjKeys = new Set((store.projects || []).map((p) => (p.title || '').trim().toLowerCase()))
+          existingProjKeys = new Set(
+            (store.projects || []).map((p) => (p.title || '').trim().toLowerCase())
+          )
         } else {
           try {
-            const { data } = await supabaseAdmin.from('profile_projects').select('title').eq('user_id', userId)
-            existingProjKeys = new Set((data || []).map((p: any) => (p.title || '').trim().toLowerCase()))
+            const { data } = await supabaseAdmin
+              .from('profile_projects')
+              .select('title')
+              .eq('user_id', userId)
+            existingProjKeys = new Set(
+              (data || []).map((p: any) => (p.title || '').trim().toLowerCase())
+            )
           } catch {
             // continue
           }
@@ -1360,7 +1533,9 @@ export class ProfileService {
       }
 
       for (const proj of payload.projects) {
-        const key = String((proj as any).title || '').trim().toLowerCase()
+        const key = String((proj as any).title || '')
+          .trim()
+          .toLowerCase()
         if (strategy === 'merge' && existingProjKeys.has(key)) {
           continue
         }
